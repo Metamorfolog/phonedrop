@@ -27,6 +27,7 @@ static class Program
             args = [];
             updated = true;
         }
+        if (args.Length >= 2 && args[0] == "--ui-selftest") return UiSelfTest(args[1]);
         if (args.Length > 0 && args[0].StartsWith("--")) return Cli.Run(args);
         Updater.CleanUp();
 
@@ -81,6 +82,35 @@ static class Program
                 await Task.Delay(500);
             }
         }
+    }
+
+    /// <summary>
+    /// Kontrola sestavení (i ořezaného): otevře okno a párovací dialog mimo obrazovku, vykreslí je do PNG a skončí.
+    /// Nesahá na jedinou instanci ani na síť (kontrola telefonu a aktualizací se nespustí – okno se neukáže).
+    /// </summary>
+    static int UiSelfTest(string outDir)
+    {
+        if (!Console.IsOutputRedirected) AttachConsole(-1);
+        ApplicationConfiguration.Initialize();
+        MainForm.SelfTest = true;
+        Directory.CreateDirectory(outDir);
+        int ok = 0;
+        foreach (Form f in new Form[] { new MainForm([]), new PairForm(), new FeedbackForm() })
+        {
+            f.StartPosition = FormStartPosition.Manual;
+            f.Location = new Point(-10000, -10000);
+            f.ShowInTaskbar = false;
+            f.Show();
+            for (int i = 0; i < 10; i++) { Application.DoEvents(); Thread.Sleep(20); }
+            using var bmp = new Bitmap(f.Width, f.Height);
+            f.DrawToBitmap(bmp, new Rectangle(Point.Empty, f.Size));
+            var file = Path.Combine(outDir, f.GetType().Name + ".png");
+            bmp.Save(file);
+            Console.WriteLine($"{f.GetType().Name}: {f.Width}x{f.Height} → {file}");
+            if (f is MainForm main) main.Quit(); else f.Dispose();
+            ok++;
+        }
+        return ok == 3 ? 0 : 1;
     }
 
     [DllImport("kernel32.dll")]

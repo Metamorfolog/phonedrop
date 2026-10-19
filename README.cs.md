@@ -39,8 +39,15 @@ cd windows/PhoneDrop
 dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o ../publish
 ```
 
-Výsledek: `windows/publish/PhoneDrop.exe` (~350 kB, potřebuje .NET 10 Desktop Runtime). Bez runtime:
-`--self-contained true` (větší exe). Ikonu přegeneruje `windows/make-icon.ps1`.
+Výsledek: `windows/publish/PhoneDrop.exe` (~400 kB, potřebuje .NET 10 Desktop Runtime). Bez runtime
+(.NET uvnitř, ořezané, ~25 MB): `dotnet publish -c Release -r win-x64 -p:SelfContained=true -p:PublishSingleFile=true`.
+`PhoneDrop.exe --ui-selftest <složka>` vykreslí všechna okna do PNG (CI tím hlídá ořezávání). Ikonu přegeneruje
+`windows/make-icon.ps1`.
+
+**Vydání** sestavuje GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml)) po pushnutí
+značky `vX.Y.Z`: obě exe, APK podepsané klíčem z tajemství repozitáře (`ANDROID_KEYSTORE_BASE64`,
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, kontroluje se otisk certifikátu),
+`SHA256SUMS.txt` a GitHub Release. Poznámky k vydání: `.github/release-notes/vX.Y.Z.md`.
 
 ## První spuštění
 

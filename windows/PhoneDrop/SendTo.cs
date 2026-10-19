@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace PhoneDrop;
 
@@ -34,6 +33,21 @@ public static class SendTo
 
     [ComImport, Guid("00021401-0000-0000-C000-000000000046")]
     class ShellLink { }
+
+    /// <summary>
+    /// Vlastní IPersistFile se všemi metodami: verzi z .NET by ořezání v self-contained exe zmenšilo
+    /// a posunulo sloty – Save by pak tiše volal jinou metodu.
+    /// </summary>
+    [ComImport, InterfaceType(ComInterfaceType.InterfaceIsIUnknown), Guid("0000010b-0000-0000-C000-000000000046")]
+    interface IPersistFile
+    {
+        void GetClassID(out Guid classId);
+        [PreserveSig] int IsDirty();
+        void Load([MarshalAs(UnmanagedType.LPWStr)] string fileName, int mode);
+        void Save([MarshalAs(UnmanagedType.LPWStr)] string fileName, [MarshalAs(UnmanagedType.Bool)] bool remember);
+        void SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string fileName);
+        void GetCurFile([MarshalAs(UnmanagedType.LPWStr)] out string fileName);
+    }
 
     [ComImport, InterfaceType(ComInterfaceType.InterfaceIsIUnknown), Guid("000214F9-0000-0000-C000-000000000046")]
     interface IShellLinkW

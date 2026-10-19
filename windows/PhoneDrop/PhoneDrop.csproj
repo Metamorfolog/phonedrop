@@ -10,12 +10,26 @@
     <RootNamespace>PhoneDrop</RootNamespace>
     <ApplicationIcon>Assets\PhoneDrop.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Product>PhoneDrop</Product>
     <Description>Přetáhni soubor nebo APK do okénka a pošli ho do telefonu</Description>
     <SatelliteResourceLanguages>cs;en</SatelliteResourceLanguages>
     <!-- Vlastní prvky se nekreslí v návrháři, serializace vlastností není potřeba. -->
     <NoWarn>$(NoWarn);WFO1000</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    Self-contained vydání (dotnet publish -r win-x64 -p:SelfContained=true): .NET je uvnitř exe, nic se neinstaluje.
+    Ořezávají se jen knihovny označené jako bezpečné (TrimMode=partial); WinForms a vlastní kód zůstávají celé.
+  -->
+  <PropertyGroup Condition="'$(SelfContained)' == 'true'">
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <DefineConstants>$(DefineConstants);SELF_CONTAINED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

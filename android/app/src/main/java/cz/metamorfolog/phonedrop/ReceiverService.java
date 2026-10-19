@@ -59,8 +59,13 @@ public class ReceiverService extends Service {
         prefs = new Prefs(this);
         inbox = new Inbox(this);
         Notifier.channels(this);
-        startForeground(Notifier.ID_SERVICE, Notifier.service(this, address()),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        if (android.os.Build.VERSION.SDK_INT >= 34) {
+            startForeground(Notifier.ID_SERVICE, Notifier.service(this, address()),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        } else {
+            // Typ „specialUse“ je až od Androidu 14; dřív stačí obyčejná služba v popředí.
+            startForeground(Notifier.ID_SERVICE, Notifier.service(this, address()));
+        }
         server = new HttpServer(Prefs.PORT, this::handle);
         try {
             server.start();

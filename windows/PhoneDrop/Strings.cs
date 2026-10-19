@@ -122,6 +122,30 @@ static class L
     public static string UpdateBadChecksum => Pick("The download doesn't match its checksum, update skipped.", "Stažený soubor nesedí s kontrolním součtem, aktualizace přeskočena.");
     public static string UpdateFailed(string why) => Pick("Update failed: ", "Aktualizace selhala: ") + why;
 
+    // Zpětná vazba
+    public static string MenuFeedback => Pick("Send feedback…", "Napsat zpětnou vazbu…");
+    public static string FeedbackTitle => Pick("Send feedback", "Zpětná vazba");
+    public static string FeedbackIntro => Pick("Found a bug or have an idea? It goes straight to the author.", "Našel jsi chybu nebo máš nápad? Dorazí rovnou autorovi.");
+    public static string KindBug => Pick("Bug", "Chyba");
+    public static string KindIdea => Pick("Idea", "Nápad");
+    public static string KindQuestion => Pick("Question", "Otázka");
+    public static string KindOther => Pick("Other", "Jiné");
+    public static string FeedbackMessage => Pick("MESSAGE", "ZPRÁVA");
+    public static string FeedbackPlaceholder => Pick("What happened, or what would you like PhoneDrop to do?", "Co se stalo, nebo co bys od PhoneDropu chtěl?");
+    public static string FeedbackEmail => Pick("E-MAIL (OPTIONAL, ONLY FOR A REPLY)", "E-MAIL (NEPOVINNÝ, JEN PRO ODPOVĚĎ)");
+    public static string FeedbackEmailPlaceholder => Pick("you@example.com", "ty@example.cz");
+    public static string FeedbackPrivacy => Pick("Sent: your text, the app version and the Windows version. Your IP address isn't stored.",
+        "Odešle se tvůj text, verze aplikace a verze Windows. IP adresa se neukládá.");
+    public static string FeedbackSend => Pick("Send", "Odeslat");
+    public static string FeedbackTooShort => Pick("Please write a few words first.", "Napiš prosím aspoň pár slov.");
+    public static string FeedbackBadEmail => Pick("That e-mail doesn't look right.", "Ten e-mail nevypadá správně.");
+    public static string FeedbackSending => Pick("Sending…", "Odesílám…");
+    public static string FeedbackOffline => Pick("Sending failed. Check your internet connection.", "Odeslání se nepovedlo. Zkontroluj připojení k internetu.");
+    public static string FeedbackTooMany => Pick("Too many messages in a short time. Try again in a few minutes.", "Moc zpráv za krátkou dobu. Zkus to za pár minut.");
+    public static string FeedbackFailed(int code) => Pick($"Sending failed ({code}). Please try again later.", $"Odeslání se nepovedlo ({code}). Zkus to prosím později.");
+    public static string FeedbackThanks => Pick("Thank you!", "Díky!");
+    public static string FeedbackThanksDetail => Pick("Your message has been sent.", "Zpráva je odeslaná.");
+
     // Chyby od telefonu (kódy z PROTOCOL.md)
     public static string WrongPin => Pick("Wrong PIN.", "Špatný PIN.");
     public static string PairingClosed => Pick("Open PhoneDrop on the phone – pairing only works while it's open.",

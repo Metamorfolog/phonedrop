@@ -35,6 +35,12 @@ public class InstallResultReceiver extends BroadcastReceiver {
         return s != null ? s : "unknown";
     }
 
+    /** Android 10–12: typovaná varianta getParcelableExtra ještě neexistuje. */
+    @SuppressWarnings("deprecation")
+    private static Intent legacyIntentExtra(Intent intent) {
+        return intent.getParcelableExtra(Intent.EXTRA_INTENT);
+    }
+
     @Override
     public void onReceive(Context ctx, Intent intent) {
         int session = intent.getIntExtra(PackageInstaller.EXTRA_SESSION_ID, -1);
@@ -46,7 +52,9 @@ public class InstallResultReceiver extends BroadcastReceiver {
         if (status != PackageInstaller.STATUS_PENDING_USER_ACTION) CONFIRMS.remove(session);
         switch (status) {
             case PackageInstaller.STATUS_PENDING_USER_ACTION: {
-                Intent confirm = intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent.class);
+                Intent confirm = android.os.Build.VERSION.SDK_INT >= 33
+                        ? intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent.class)
+                        : legacyIntentExtra(intent);
                 if (confirm == null) break;
                 setState(session, "confirm");
                 confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -17,12 +17,15 @@ android {
         // MediaStore.Downloads + RELATIVE_PATH (Download/Drop) bez oprávnění k úložišti.
         minSdk 29
         targetSdk 36
-        // Verzi jde pro testy aktualizací přepsat: -PverCode=… -PverName=…
-        versionCode Integer.parseInt((project.findProperty('verCode') ?: '3').toString())
-        versionName((project.findProperty('verName') ?: '1.2.0').toString())
+        // Vydání (GitHub Actions) bere verzi ze značky: -PverName=X.Y.Z -PverCode=X*10000+Y*100+Z
+        versionCode Integer.parseInt((project.findProperty('verCode') ?: '10300').toString())
+        versionName((project.findProperty('verName') ?: '1.3.0').toString())
         // Odkud se berou aktualizace (poslední vydání na GitHubu); pro testy -PupdateUrl=…
         buildConfigField 'String', 'UPDATE_URL',
                 "\"${project.findProperty('updateUrl') ?: 'https://api.github.com/repos/Metamorfolog/phonedrop/releases/latest'}\""
+        // Zpětná vazba (služba na webu projektu); pro testy -PfeedbackUrl=…
+        buildConfigField 'String', 'FEEDBACK_URL',
+                "\"${project.findProperty('feedbackUrl') ?: 'https://phonedrop.apexpiksel.cz/api/feedback'}\""
     }
 
     buildFeatures {

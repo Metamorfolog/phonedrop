@@ -79,6 +79,7 @@ public sealed class PairForm : Form
         Shown += async (_, _) =>
         {
             list.ItemHeight = (int)(52 * DeviceDpi / 96f);
+            if (MainForm.SelfTest) return;
             await DiscoverAsync();
         };
         ResumeLayout(false);

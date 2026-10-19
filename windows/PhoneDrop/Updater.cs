@@ -24,6 +24,13 @@ public static class Updater
 
     static string Url => Environment.GetEnvironmentVariable("PHONEDROP_UPDATE_URL") is { Length: > 0 } u ? u : DefaultUrl;
 
+    /// <summary>Plné vydání s .NET uvnitř (jinak malé, které potřebuje nainstalovaný .NET).</summary>
+#if SELF_CONTAINED
+    public const bool IsSelfContained = true;
+#else
+    public const bool IsSelfContained = false;
+#endif
+
     public static Version Current
     {
         get
@@ -48,12 +55,18 @@ public static class Updater
         version = new Version(version.Major, version.Minor, Math.Max(0, version.Build));
         if (version <= Current) return null;
 
+        // Vydání má dvě exe: plné (…-win-x64.exe, .NET uvnitř) a malé (…-small.exe, potřebuje .NET).
+        // Aktualizuje se na stejnou variantu, jakou uživatel má; když chybí, vezme se jakékoli exe.
         string? exeName = null, exeUrl = null, sumsUrl = null;
         foreach (var a in root.GetProperty("assets").EnumerateArray())
         {
             var name = a.GetProperty("name").GetString() ?? "";
             var url = a.GetProperty("browser_download_url").GetString() ?? "";
-            if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) (exeName, exeUrl) = (name, url);
+            if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                bool small = name.EndsWith("-small.exe", StringComparison.OrdinalIgnoreCase);
+                if (exeUrl == null || small == !IsSelfContained) (exeName, exeUrl) = (name, url);
+            }
             else if (name.Equals("SHA256SUMS.txt", StringComparison.OrdinalIgnoreCase)) sumsUrl = url;
         }
         return exeUrl == null ? null : new UpdateInfo(version, tag, exeName!, exeUrl, sumsUrl);

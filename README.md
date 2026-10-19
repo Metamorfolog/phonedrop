@@ -13,6 +13,8 @@ installer right away: one tap on **Install** and you're done. No cable, no `adb`
 - Light and dark theme, English and Czech, on both sides.
 - Both apps update themselves from GitHub Releases (the download is checked against `SHA256SUMS.txt`;
   Android additionally only accepts an APK signed with the same key).
+- Send feedback straight from either app (⋯ → *Send feedback* on Windows, *Feedback* on the phone).
+- Every release is built from this repository by GitHub Actions, not on someone's PC.
 
 ```
 android/     receiver for Android (Java, no libraries, Android 10+)
@@ -26,7 +28,8 @@ PROTOCOL.md  the HTTP protocol between the two (in Czech)
 1. **Phone:** install `PhoneDrop.apk`, open it and allow notifications. It shows its address and a **PIN**.
    Tap *Allow* next to *Install apps* and *Run in background* (otherwise the phone stops receiving when idle).
    Pairing only works while that screen is open; after five wrong PINs the phone picks a new one and waits a minute.
-2. **Windows:** run `PhoneDrop.exe` (needs the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)).
+2. **Windows:** run `PhoneDrop-…-win-x64.exe` – .NET is built in, nothing to install. (If you already have the
+   [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0), the `…-small.exe` does the same in 0.4 MB.)
    Pick the phone from the list (or type its address) and enter the PIN.
 3. Drop files into the window. Closing it keeps PhoneDrop in the notification area; quit from the ⋯ menu.
 4. Optional: ⋯ → *Explorer: Send to › Phone* adds **Send to › Phone (PhoneDrop)** to the right-click menu.
@@ -67,8 +70,21 @@ an APK signed with a different key can't update an installed one.
 
 ```bash
 cd windows/PhoneDrop
-dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o ../publish
+# self-contained (~25 MB, .NET inside, trimmed)
+dotnet publish -c Release -r win-x64 -p:SelfContained=true -p:PublishSingleFile=true -o ../publish
+# small (~0.4 MB, needs the .NET 10 Desktop Runtime)
+dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o ../publish-small
 ```
+
+`PhoneDrop.exe --ui-selftest <folder>` renders every window into PNGs (used by CI to catch trimming problems).
+
+### Releases
+
+Pushing a tag `vX.Y.Z` runs [`.github/workflows/release.yml`](.github/workflows/release.yml): it builds both exes
+and the APK, signs the APK with the key from the repository secrets (`ANDROID_KEYSTORE_BASE64`,
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`), checks the certificate fingerprint,
+writes `SHA256SUMS.txt` and publishes the GitHub Release. Release notes come from
+`.github/release-notes/vX.Y.Z.md` when it exists.
 
 ## Command line
 

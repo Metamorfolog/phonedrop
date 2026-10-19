@@ -80,16 +80,22 @@ public class MainActivity extends Activity {
         frame.setBackgroundColor(color(R.color.bg));
         frame.addView(scroll);
         frame.setOnApplyWindowInsetsListener((v, insets) -> {
-            android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
-            v.setPadding(bars.left, bars.top, bars.right, 0);
-            root.setPadding(px(18), px(18), px(18), px(28) + bars.bottom);
-            return WindowInsets.CONSUMED;
+            int left, top, right, bottom;
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+                left = bars.left; top = bars.top; right = bars.right; bottom = bars.bottom;
+            } else {
+                // Android 10: starší API (WindowInsets.Type je až od Androidu 11).
+                left = insets.getSystemWindowInsetLeft(); top = insets.getSystemWindowInsetTop();
+                right = insets.getSystemWindowInsetRight(); bottom = insets.getSystemWindowInsetBottom();
+            }
+            v.setPadding(left, top, right, 0);
+            root.setPadding(px(18), px(18), px(18), px(28) + bottom);
+            return android.os.Build.VERSION.SDK_INT >= 30 ? WindowInsets.CONSUMED : insets.consumeSystemWindowInsets();
         });
         setContentView(frame);
 
-        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
-        }
+        if (!notificationsAllowed()) requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
         if (prefs.enabled()) ReceiverService.start(this);
     }
 
@@ -149,7 +155,7 @@ public class MainActivity extends Activity {
         // Kontrolní seznam: co telefon potřebuje, aby vše šlo na jedno ťuknutí.
         boolean install = getPackageManager().canRequestPackageInstalls();
         boolean battery = getSystemService(PowerManager.class).isIgnoringBatteryOptimizations(getPackageName());
-        boolean notify = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+        boolean notify = notificationsAllowed();
         int done = (install ? 1 : 0) + (battery ? 1 : 0) + (notify ? 1 : 0);
         section(getString(R.string.section_setup), done == 3 ? getString(R.string.setup_done) : getString(R.string.setup_progress, done, 3));
         LinearLayout setup = card();
@@ -242,6 +248,13 @@ public class MainActivity extends Activity {
             seg.addView(b, new LinearLayout.LayoutParams(0, WRAP, 1));
         }
         look.addView(seg, new LinearLayout.LayoutParams(MATCH, WRAP));
+
+        // Zpětná vazba.
+        section(getString(R.string.section_feedback), null);
+        LinearLayout fb = card();
+        View fbRow = item(fb, R.drawable.ic_feedback, R.color.blue, R.color.blueTint,
+                getString(R.string.fb_title), getString(R.string.fb_sub), chevron());
+        fbRow.setOnClickListener(v -> showFeedback());
 
         TextView foot = label(getString(R.string.footer, versionName()), 12, R.color.faint, null);
         foot.setGravity(Gravity.CENTER);
@@ -463,6 +476,109 @@ public class MainActivity extends Activity {
     }
 
     // ---- pomocníci ----
+
+    /** Dialog zpětné vazby: druh (čipy), zpráva, nepovinný e-mail; odeslání na pozadí. */
+    private void showFeedback() {
+        LinearLayout box = column();
+        box.setPadding(px(22), px(8), px(22), 0);
+        String[] codes = {"bug", "idea", "question", "other"};
+        int[] names = {R.string.fb_bug, R.string.fb_idea, R.string.fb_question, R.string.fb_other};
+        String[] kind = {"bug"};
+        LinearLayout chips = row();
+        TextView[] chipViews = new TextView[codes.length];
+        Runnable paint = () -> {
+            for (int i = 0; i < codes.length; i++) {
+                boolean sel = codes[i].equals(kind[0]);
+                chipViews[i].setTextColor(color(sel ? R.color.onAccent : R.color.dim));
+                chipViews[i].setBackground(rounded(sel ? R.color.accent : R.color.line, 50));
+            }
+        };
+        for (int i = 0; i < codes.length; i++) {
+            int n = i;
+            TextView c = label(getString(names[i]), 14, R.color.dim, MEDIUM);
+            c.setPadding(px(14), px(7), px(14), px(7));
+            c.setOnClickListener(v -> { kind[0] = codes[n]; paint.run(); });
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(WRAP, WRAP);
+            lp.rightMargin = px(6);
+            chips.addView(c, lp);
+            chipViews[i] = c;
+        }
+        paint.run();
+        android.widget.HorizontalScrollView chipScroll = new android.widget.HorizontalScrollView(this);
+        chipScroll.setHorizontalScrollBarEnabled(false);
+        chipScroll.addView(chips);
+        box.addView(chipScroll);
+
+        android.widget.EditText message = new android.widget.EditText(this);
+        message.setHint(R.string.fb_message_hint);
+        message.setMinLines(4);
+        message.setGravity(Gravity.TOP | Gravity.START);
+        message.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                | android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        message.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(5000)});
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(MATCH, WRAP);
+        mlp.topMargin = px(12);
+        box.addView(message, mlp);
+
+        android.widget.EditText email = new android.widget.EditText(this);
+        email.setHint(R.string.fb_email_hint);
+        email.setSingleLine(true);
+        email.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        box.addView(email, new LinearLayout.LayoutParams(MATCH, WRAP));
+
+        TextView status = label(getString(R.string.fb_privacy), 13, R.color.dim, null);
+        status.setPadding(0, px(8), 0, 0);
+        box.addView(status);
+
+        android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.fb_title)
+                .setView(box)
+                .setPositiveButton(R.string.fb_send, null)
+                .setNegativeButton(R.string.fb_cancel, null)
+                .create();
+        dlg.setOnShowListener(d -> dlg.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String text = message.getText().toString().trim();
+            String mail = email.getText().toString().trim();
+            status.setTextColor(color(R.color.bad));
+            if (text.length() < 3) { status.setText(R.string.fb_too_short); return; }
+            if (!mail.isEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(mail).matches()) {
+                status.setText(R.string.fb_bad_email);
+                return;
+            }
+            v.setEnabled(false);
+            status.setTextColor(color(R.color.dim));
+            status.setText(R.string.fb_sending);
+            new Thread(() -> {
+                String error = null;
+                try {
+                    Feedback.send(this, kind[0], text, mail);
+                } catch (Feedback.Failed f) {
+                    error = f.code == 0 ? getString(R.string.fb_offline)
+                            : f.code == 429 ? getString(R.string.fb_too_many) : getString(R.string.fb_failed, f.code);
+                } catch (java.io.IOException e) {
+                    error = getString(R.string.fb_offline);
+                }
+                String err = error;
+                runOnUiThread(() -> {
+                    if (err == null) {
+                        dlg.dismiss();
+                        android.widget.Toast.makeText(this, R.string.fb_thanks, android.widget.Toast.LENGTH_LONG).show();
+                    } else {
+                        v.setEnabled(true);
+                        status.setTextColor(color(R.color.bad));
+                        status.setText(err);
+                    }
+                });
+            }, "phonedrop-feedback").start();
+        }));
+        dlg.show();
+    }
+
+    /** Oprávnění k oznámením existuje až od Androidu 13; dřív jsou oznámení povolená vždy. */
+    private boolean notificationsAllowed() {
+        return android.os.Build.VERSION.SDK_INT < 33
+                || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+    }
 
     private void open(Intent i) {
         try {

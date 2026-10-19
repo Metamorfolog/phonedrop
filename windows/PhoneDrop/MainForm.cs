@@ -3,6 +3,9 @@ namespace PhoneDrop;
 /// <summary>Malé okénko s drop zónou, průběhem a ikonou v oznamovací oblasti.</summary>
 public sealed class MainForm : Form
 {
+    /// <summary>Kontrola sestavení (--ui-selftest): okno se jen vykreslí, nic se nespouští.</summary>
+    internal static bool SelfTest;
+
     public static readonly Icon AppIcon = new(typeof(MainForm).Assembly.GetManifestResourceStream("PhoneDrop.ico")!);
 
     readonly Config config = Config.Load();
@@ -93,6 +96,7 @@ public sealed class MainForm : Form
             themeItem.DropDownItems.Add(new ToolStripMenuItem(name, null, (_, _) => SetAppearance(code)) { Checked = config.Appearance == code });
         themeItem.DropDown.BackColor = Theme.Surface;
         menu.Items.Add(themeItem);
+        menu.Items.Add(L.MenuFeedback, null, (_, _) => OpenFeedback());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(L.MenuQuit, null, (_, _) => Quit());
         foreach (ToolStripItem item in menu.Items) item.Padding = new Padding(4, 5, 12, 5);
@@ -137,6 +141,7 @@ public sealed class MainForm : Form
         if (justUpdated) card.Set(CardKind.Ok, L.UpdatedTo("v" + Updater.Current.ToString(3)), L.ReadyDetail);
         Shown += (_, _) =>
         {
+            if (SelfTest) return;
             if (!config.IsPaired) Pair();
             Enqueue(initialFiles);
             watch.Start();
@@ -242,6 +247,13 @@ public sealed class MainForm : Form
         online = true;
         RefreshPhone();
         card.Set(CardKind.Ok, L.PairedWith(config.DeviceName!), L.DropHere);
+    }
+
+    void OpenFeedback()
+    {
+        ShowWindow();
+        using var dlg = new FeedbackForm();
+        if (dlg.ShowDialog(this) == DialogResult.OK && !busy) card.Set(CardKind.Ok, L.FeedbackThanks, L.FeedbackThanksDetail);
     }
 
     void ToggleSendTo()
@@ -431,7 +443,7 @@ public sealed class MainForm : Form
 
     static string Clip(string s) => s.Length <= 63 ? s : s[..62] + "…";
 
-    void Quit()
+    internal void Quit()
     {
         exiting = true;
         tray.Visible = false;

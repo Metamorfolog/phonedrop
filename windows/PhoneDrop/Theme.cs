@@ -115,7 +115,7 @@ static class Theme
 sealed class RoundButton : Button
 {
     bool hover, down;
-    public bool Primary { get; init; }
+    public bool Primary { get; set; }
 
     public RoundButton()
     {

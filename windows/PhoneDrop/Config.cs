@@ -20,14 +20,13 @@ public sealed class Config
 
     public static string Dir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PhoneDrop");
     static string FilePath => Path.Combine(Dir, "config.json");
-    static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 
     public static Config Load()
     {
         try
         {
             if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize<Config>(File.ReadAllText(FilePath)) ?? new Config();
+                return JsonSerializer.Deserialize(File.ReadAllText(FilePath), ConfigJson.Default.Config) ?? new Config();
         }
         catch (Exception) { }
         return new Config();
@@ -36,6 +35,11 @@ public sealed class Config
     public void Save()
     {
         Directory.CreateDirectory(Dir);
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(this, Json));
+        File.WriteAllText(FilePath, JsonSerializer.Serialize(this, ConfigJson.Default.Config));
     }
 }
+
+/// <summary>Serializace bez reflexe – funguje i v ořezaném self-contained exe.</summary>
+[System.Text.Json.Serialization.JsonSourceGenerationOptions(WriteIndented = true)]
+[System.Text.Json.Serialization.JsonSerializable(typeof(Config))]
+internal sealed partial class ConfigJson : System.Text.Json.Serialization.JsonSerializerContext;
