@@ -33,6 +33,10 @@
     <string name="notify_missing">Potřeba pro potvrzení instalace z pozadí</string>
 
     <string name="section_pcs">Počítače</string>
+    <string name="section_look">Vzhled</string>
+    <string name="theme_system">Systém</string>
+    <string name="theme_light">Světlý</string>
+    <string name="theme_dark">Tmavý</string>
     <string name="step1">Na počítači spusť PhoneDrop</string>
     <string name="step2">Klikni na ⋯ → Spárovat telefon a vyber tenhle</string>
     <string name="step3">Opiš PIN z horní karty – a přetahuj soubory</string>

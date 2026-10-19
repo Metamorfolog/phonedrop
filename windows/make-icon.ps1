@@ -1,4 +1,5 @@
-# Vygeneruje PhoneDrop\Assets\PhoneDrop.ico (stejný motiv jako ikona Android appky).
+# Vygeneruje PhoneDrop\Assets\PhoneDrop.ico – stejný motiv jako ikona Android appky
+# (zelený kruh s přechodem, bílý telefon se šipkou dolů).
 Add-Type -AssemblyName System.Drawing
 $sizes = 16, 24, 32, 48, 64, 256
 $pngs = @()
@@ -7,21 +8,29 @@ foreach ($s in $sizes) {
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = 'AntiAlias'
     $k = $s / 48.0
-    $g.FillEllipse([System.Drawing.Brushes]::Black, 0, 0, $s - 1, $s - 1)
-    $green = [System.Drawing.Color]::FromArgb(127, 209, 139)
-    $pen = New-Object System.Drawing.Pen $green, ([Math]::Max(1.2, 2.5 * $k))
-    $g.DrawRectangle($pen, [single](15 * $k), [single](10 * $k), [single](18 * $k), [single](28 * $k))
-    $brush = New-Object System.Drawing.SolidBrush $green
-    $pts = @(
-        (New-Object System.Drawing.PointF ([single](22.5 * $k)), ([single](15 * $k))),
-        (New-Object System.Drawing.PointF ([single](25.5 * $k)), ([single](15 * $k))),
-        (New-Object System.Drawing.PointF ([single](25.5 * $k)), ([single](23 * $k))),
-        (New-Object System.Drawing.PointF ([single](29.5 * $k)), ([single](23 * $k))),
-        (New-Object System.Drawing.PointF ([single](24 * $k)), ([single](31 * $k))),
-        (New-Object System.Drawing.PointF ([single](18.5 * $k)), ([single](23 * $k))),
-        (New-Object System.Drawing.PointF ([single](22.5 * $k)), ([single](23 * $k)))
-    )
-    $g.FillPolygon($brush, $pts)
+    $rect = New-Object System.Drawing.RectangleF 0, 0, ($s - 0.5), ($s - 0.5)
+    $grad = New-Object System.Drawing.Drawing2D.LinearGradientBrush $rect, ([System.Drawing.Color]::FromArgb(70, 204, 116)), ([System.Drawing.Color]::FromArgb(18, 128, 72)), 50.0
+    $g.FillEllipse($grad, $rect)
+    $white = [System.Drawing.Color]::White
+    $pen = New-Object System.Drawing.Pen $white, ([Math]::Max(1.3, 2.6 * $k))
+    $pen.LineJoin = 'Round'; $pen.StartCap = 'Round'; $pen.EndCap = 'Round'
+    # Telefon se zaoblenými rohy.
+    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $x = 15.5 * $k; $y = 10.5 * $k; $w = 17 * $k; $h = 27 * $k; $r = 5 * $k
+    $path.AddArc($x, $y, $r, $r, 180, 90); $path.AddArc($x + $w - $r, $y, $r, $r, 270, 90)
+    $path.AddArc($x + $w - $r, $y + $h - $r, $r, $r, 0, 90); $path.AddArc($x, $y + $h - $r, $r, $r, 90, 90)
+    $path.CloseFigure()
+    $g.DrawPath($pen, $path)
+    # Šipka dolů.
+    $g.DrawLine($pen, [single](24 * $k), [single](16 * $k), [single](24 * $k), [single](27 * $k))
+    $g.DrawLines($pen, [System.Drawing.PointF[]]@(
+        (New-Object System.Drawing.PointF ([single](19.5 * $k)), ([single](23 * $k))),
+        (New-Object System.Drawing.PointF ([single](24 * $k)), ([single](27.5 * $k))),
+        (New-Object System.Drawing.PointF ([single](28.5 * $k)), ([single](23 * $k)))))
+    if ($s -ge 32) {
+        $brush = New-Object System.Drawing.SolidBrush $white
+        $g.FillRectangle($brush, [single](21.5 * $k), [single](32.5 * $k), [single](5 * $k), [single](2 * $k))
+    }
     $g.Dispose()
     $ms = New-Object System.IO.MemoryStream
     $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)

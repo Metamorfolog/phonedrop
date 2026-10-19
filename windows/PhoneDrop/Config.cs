@@ -13,6 +13,8 @@ public sealed class Config
     public bool TopMost { get; set; }
     /// <summary>"auto" (podle Windows) nebo kód jazyka – viz <see cref="L.Languages"/>.</summary>
     public string Language { get; set; } = "auto";
+    /// <summary>Vzhled: "auto" (podle Windows), "light" nebo "dark".</summary>
+    public string Appearance { get; set; } = "auto";
 
     public bool IsPaired => !string.IsNullOrEmpty(Token) && !string.IsNullOrEmpty(Address);
 

@@ -45,6 +45,10 @@ final class Prefs {
     }
 
     boolean enabled() { return sp.getBoolean("enabled", true); }
+
+    /** Vzhled appky: "system", "light" nebo "dark". */
+    String theme() { return sp.getString("theme", "system"); }
+    void setTheme(String theme) { sp.edit().putString("theme", theme).commit(); }
     void setEnabled(boolean on) { sp.edit().putBoolean("enabled", on).apply(); }
 
     synchronized String pin() {

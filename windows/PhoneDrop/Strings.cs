@@ -57,6 +57,10 @@ static class L
     public static string MenuTopMost => Pick("Always on top", "Vždy navrchu");
     public static string MenuLanguage => Pick("Language", "Jazyk");
     public static string MenuAuto => Pick("Automatic (Windows)", "Automaticky (podle Windows)");
+    public static string MenuTheme => Pick("Appearance", "Vzhled");
+    public static string ThemeAuto => Pick("Automatic (Windows)", "Automaticky (podle Windows)");
+    public static string ThemeLight => Pick("Light", "Světlý");
+    public static string ThemeDark => Pick("Dark", "Tmavý");
     public static string MenuQuit => Pick("Quit", "Ukončit");
     public static string SendToAdded => Pick("Added to Send to", "Přidáno do Odeslat do");
     public static string SendToAddedHint => Pick("Right-click a file → Send to › Phone", "Pravé tlačítko na soubor → Odeslat do › Telefon");
@@ -120,6 +124,7 @@ static class L
           PhoneDrop.exe --status                checks the connection to the paired phone
           PhoneDrop.exe --sendto on|off         adds/removes "Send to › Phone (PhoneDrop)"
           PhoneDrop.exe --lang auto|en|cs       sets the language
+          PhoneDrop.exe --theme auto|light|dark sets the appearance
         """, """
         PhoneDrop – odeslání souborů do telefonu
 
@@ -130,6 +135,7 @@ static class L
           PhoneDrop.exe --status                ověří spojení se spárovaným telefonem
           PhoneDrop.exe --sendto on|off         přidá/odebere „Odeslat do › Telefon (PhoneDrop)“
           PhoneDrop.exe --lang auto|en|cs       nastaví jazyk
+          PhoneDrop.exe --theme auto|light|dark nastaví vzhled
         """);
     public static string CliError => Pick("Error: ", "Chyba: ");
     public static string CliNothing => Pick("Nothing found.", "Nic nenalezeno.");
@@ -137,5 +143,6 @@ static class L
     public static string CliStatus(string name, string addr) => Pick($"OK: {name} at {addr}", $"OK: {name} na {addr}");
     public static string CliSendToOn => Pick("Send to › Phone (PhoneDrop): added", "Odeslat do › Telefon (PhoneDrop): přidáno");
     public static string CliSendToOff => Pick("Removed.", "Odebráno.");
+    public static string CliTheme(string name) => Pick("Appearance: ", "Vzhled: ") + name;
     public static string CliLanguage(string name) => Pick("Language: ", "Jazyk: ") + name;
 }

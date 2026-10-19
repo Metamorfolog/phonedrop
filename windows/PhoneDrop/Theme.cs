@@ -3,22 +3,76 @@ using System.Runtime.InteropServices;
 
 namespace PhoneDrop;
 
-/// <summary>Barvy a vlastní ovládací prvky tmavého vzhledu (stejné odstíny jako Android appka).</summary>
+/// <summary>
+/// Barvy a vlastní ovládací prvky. Světlá a tmavá paleta odpovídají Android appce;
+/// "auto" se řídí nastavením Windows (Přizpůsobení → Barvy → Režim aplikací).
+/// </summary>
 static class Theme
 {
-    public static readonly Color Back = Color.FromArgb(18, 18, 18);
-    public static readonly Color Surface = Color.FromArgb(30, 30, 30);
-    public static readonly Color Surface2 = Color.FromArgb(42, 42, 42);
-    public static readonly Color Line = Color.FromArgb(58, 58, 58);
-    public static readonly Color Fore = Color.FromArgb(232, 232, 232);
-    public static readonly Color Dim = Color.FromArgb(150, 150, 150);
-    public static readonly Color Accent = Color.FromArgb(127, 209, 139);
-    public static readonly Color OnAccent = Color.FromArgb(12, 30, 16);
-    public static readonly Color Bad = Color.FromArgb(240, 113, 113);
-    public static readonly Color Warn = Color.FromArgb(240, 163, 94);
+    sealed record Palette(Color Back, Color Surface, Color Surface2, Color Line, Color Fore, Color Dim,
+        Color Accent, Color OnAccent, Color Bad, Color Warn, Color Shadow);
+
+    static readonly Palette Light = new(
+        Back: Color.FromArgb(242, 245, 241), Surface: Color.White, Surface2: Color.FromArgb(234, 239, 234),
+        Line: Color.FromArgb(214, 222, 215), Fore: Color.FromArgb(22, 33, 26), Dim: Color.FromArgb(102, 115, 106),
+        Accent: Color.FromArgb(36, 166, 83), OnAccent: Color.White, Bad: Color.FromArgb(220, 74, 74),
+        Warn: Color.FromArgb(217, 130, 43), Shadow: Color.FromArgb(31, 58, 42));
+
+    static readonly Palette Dark = new(
+        Back: Color.FromArgb(15, 19, 17), Surface: Color.FromArgb(26, 32, 28), Surface2: Color.FromArgb(38, 46, 41),
+        Line: Color.FromArgb(52, 62, 56), Fore: Color.FromArgb(236, 242, 238), Dim: Color.FromArgb(154, 166, 158),
+        Accent: Color.FromArgb(95, 214, 138), OnAccent: Color.FromArgb(6, 33, 15), Bad: Color.FromArgb(240, 123, 123),
+        Warn: Color.FromArgb(242, 166, 94), Shadow: Color.Black);
+
+    static Palette p = Dark;
+
+    public static bool IsDark { get; private set; } = true;
+    public static Color Back => p.Back;
+    public static Color Surface => p.Surface;
+    public static Color Surface2 => p.Surface2;
+    public static Color Line => p.Line;
+    public static Color Fore => p.Fore;
+    public static Color Dim => p.Dim;
+    public static Color Accent => p.Accent;
+    public static Color OnAccent => p.OnAccent;
+    public static Color Bad => p.Bad;
+    public static Color Warn => p.Warn;
+
+    /// <summary>"auto", "light" nebo "dark".</summary>
+    public static void Init(string? setting)
+    {
+        IsDark = setting switch { "light" => false, "dark" => true, _ => !SystemUsesLight() };
+        p = IsDark ? Dark : Light;
+    }
+
+    static bool SystemUsesLight()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            return key?.GetValue("AppsUseLightTheme") is int v && v != 0;
+        }
+        catch (Exception) { return false; }
+    }
+
+    /// <summary>Měkký stín pod kartou (jen ve světlém vzhledu – v tmavém by nebyl vidět).</summary>
+    public static void CardShadow(Graphics g, RectangleF r, float radius)
+    {
+        if (IsDark) return;
+        for (int i = 4; i >= 1; i--)
+        {
+            using var path = Rounded(new RectangleF(r.X - i * 0.5f, r.Y + i * 0.9f, r.Width + i, r.Height + i * 0.6f), radius + i);
+            using var b = new SolidBrush(Color.FromArgb(7, p.Shadow));
+            g.FillPath(b, path);
+        }
+    }
 
     public static Font UiFont(float size, FontStyle style = FontStyle.Regular) => new("Segoe UI", size, style);
     public static Font Semibold(float size) => new("Segoe UI Semibold", size);
+
+    /// <summary>Písmo v pixelech pro vlastní kreslení: velikost v bodech při 96 DPI × měřítko monitoru.</summary>
+    public static Font PxFont(float pt, float k, bool semibold = false) =>
+        new(semibold ? "Segoe UI Semibold" : "Segoe UI", pt * 96f / 72f * k, GraphicsUnit.Pixel);
 
     public static GraphicsPath Rounded(RectangleF r, float radius)
     {
@@ -35,10 +89,10 @@ static class Theme
     public static Color Mix(Color a, Color b, float t) => Color.FromArgb(
         (int)(a.R + (b.R - a.R) * t), (int)(a.G + (b.G - a.G) * t), (int)(a.B + (b.B - a.B) * t));
 
-    /// <summary>Tmavý titulek okna (Windows 10 20H1+ / Windows 11) v barvě pozadí.</summary>
-    public static void DarkTitleBar(Form form)
+    /// <summary>Titulek okna ve stejném vzhledu jako obsah (Windows 10 20H1+ / Windows 11), v barvě pozadí.</summary>
+    public static void TitleBar(Form form)
     {
-        int on = 1;
+        int on = IsDark ? 1 : 0;
         DwmSetWindowAttribute(form.Handle, 20, ref on, 4); // DWMWA_USE_IMMERSIVE_DARK_MODE
         int color = Back.R | Back.G << 8 | Back.B << 16;
         DwmSetWindowAttribute(form.Handle, 35, ref color, 4); // DWMWA_CAPTION_COLOR (Win11)
@@ -84,7 +138,7 @@ sealed class RoundButton : Button
         var g = e.Graphics.Smooth();
         g.Clear(Parent?.BackColor ?? Theme.Back);
         var fill = Primary ? Theme.Accent : Theme.Surface2;
-        if (hover) fill = Theme.Mix(fill, Color.White, 0.10f);
+        if (hover) fill = Theme.Mix(fill, Primary || Theme.IsDark ? Color.White : Color.Black, Primary && !Theme.IsDark ? 0.12f : 0.07f);
         if (down) fill = Theme.Mix(fill, Color.Black, 0.15f);
         if (!Enabled) fill = Theme.Mix(fill, Theme.Back, 0.55f);
         using var path = Theme.Rounded(new RectangleF(0.5f, 0.5f, Width - 1, Height - 1), Height / 2f);
@@ -121,7 +175,7 @@ sealed class InputBox : Panel
     {
         var g = e.Graphics.Smooth();
         g.Clear(Parent?.BackColor ?? Theme.Back);
-        using var path = Theme.Rounded(new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f), 10);
+        using var path = Theme.Rounded(new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f), 10 * DeviceDpi / 96f);
         using var fill = new SolidBrush(Theme.Surface2);
         g.FillPath(fill, path);
         using var pen = new Pen(focused ? Theme.Accent : Theme.Line, focused ? 1.5f : 1f);

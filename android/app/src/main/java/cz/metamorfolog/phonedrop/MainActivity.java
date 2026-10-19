@@ -5,7 +5,9 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
@@ -46,6 +48,19 @@ public class MainActivity extends Activity {
     private float dp;
     private boolean animateIn = true;
     private ValueAnimator pulse;
+
+    /** Vlastní volba vzhledu přepíše noční režim systému jen pro tuhle obrazovku (values-night). */
+    @Override
+    protected void attachBaseContext(Context base) {
+        String theme = new Prefs(base).theme();
+        if (!"system".equals(theme)) {
+            Configuration c = new Configuration(base.getResources().getConfiguration());
+            c.uiMode = (c.uiMode & ~Configuration.UI_MODE_NIGHT_MASK)
+                    | ("dark".equals(theme) ? Configuration.UI_MODE_NIGHT_YES : Configuration.UI_MODE_NIGHT_NO);
+            base = base.createConfigurationContext(c);
+        }
+        super.attachBaseContext(base);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -174,6 +189,29 @@ public class MainActivity extends Activity {
             divider(pcs);
             pcs.addView(unpair, new LinearLayout.LayoutParams(MATCH, WRAP));
         }
+
+        // Vzhled.
+        section(getString(R.string.section_look), null);
+        LinearLayout look = card();
+        look.setPadding(px(6), px(6), px(6), px(6));
+        LinearLayout seg = row();
+        String current = prefs.theme();
+        String[][] options = {{"system", getString(R.string.theme_system)}, {"light", getString(R.string.theme_light)},
+                {"dark", getString(R.string.theme_dark)}};
+        for (String[] o : options) {
+            boolean sel = o[0].equals(current);
+            TextView b = label(o[1], 14, sel ? R.color.onAccent : R.color.dim, MEDIUM);
+            b.setGravity(Gravity.CENTER);
+            b.setPadding(0, px(11), 0, px(11));
+            b.setBackground(sel ? rounded(R.color.accent, 18) : new RippleDrawable(
+                    ColorStateList.valueOf(color(R.color.line)), null, rounded(R.color.card, 18)));
+            if (!sel) b.setOnClickListener(v -> {
+                prefs.setTheme(o[0]);
+                recreate();
+            });
+            seg.addView(b, new LinearLayout.LayoutParams(0, WRAP, 1));
+        }
+        look.addView(seg, new LinearLayout.LayoutParams(MATCH, WRAP));
 
         TextView foot = label(getString(R.string.footer, versionName()), 12, R.color.faint, null);
         foot.setGravity(Gravity.CENTER);

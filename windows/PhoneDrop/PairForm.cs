@@ -26,6 +26,7 @@ public sealed class PairForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
+        AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
         ClientSize = new Size(380, 446);
 
@@ -75,13 +76,17 @@ public sealed class PairForm : Form
         CancelButton = cancel;
 
         Controls.AddRange([title, intro, found, search, empty, list, la, address, lp, pin, info, pair, cancel]);
-        Shown += async (_, _) => await DiscoverAsync();
+        Shown += async (_, _) =>
+        {
+            list.ItemHeight = (int)(52 * DeviceDpi / 96f);
+            await DiscoverAsync();
+        };
     }
 
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
-        Theme.DarkTitleBar(this);
+        Theme.TitleBar(this);
     }
 
     sealed record FoundItem(FoundPhone Phone)
@@ -96,19 +101,21 @@ public sealed class PairForm : Form
         using (var bg = new SolidBrush(Theme.Back)) g.FillRectangle(bg, e.Bounds);
         if (e.Index < 0 || list.Items[e.Index] is not FoundItem item) return;
         bool selected = (e.State & DrawItemState.Selected) != 0;
-        var r = new RectangleF(e.Bounds.X + 0.5f, e.Bounds.Y + 2.5f, e.Bounds.Width - 1.5f, e.Bounds.Height - 6);
-        using (var path = Theme.Rounded(r, 12))
+        float k = list.DeviceDpi / 96f;
+        var r = new RectangleF(e.Bounds.X + 0.5f, e.Bounds.Y + 2.5f * k, e.Bounds.Width - 1.5f, e.Bounds.Height - 6 * k);
+        using (var path = Theme.Rounded(r, 12 * k))
         {
             using var fill = new SolidBrush(selected ? Theme.Mix(Theme.Surface, Theme.Accent, 0.10f) : Theme.Surface);
             g.FillPath(fill, path);
             if (selected) { using var pen = new Pen(Theme.Accent, 1.4f); g.DrawPath(pen, path); }
         }
-        PaintedControl.DrawPhone(g, new RectangleF(r.X + 16, r.Y + 11, 13, 22), selected ? Theme.Accent : Theme.Dim, 1.6f);
+        PaintedControl.DrawPhone(g, new RectangleF(r.X + 16 * k, r.Y + 11 * k, 13 * k, 22 * k), selected ? Theme.Accent : Theme.Dim, 1.6f * k);
         var name = item.Phone.Instance.StartsWith("PhoneDrop ") ? item.Phone.Instance[10..] : item.Phone.Instance;
-        using var tf = Theme.Semibold(9.75f);
-        using var df = Theme.UiFont(8.5f);
-        TextRenderer.DrawText(g, name, tf, new Rectangle((int)r.X + 44, (int)r.Y + 6, (int)r.Width - 54, 20), Theme.Fore, TextFormatFlags.EndEllipsis);
-        TextRenderer.DrawText(g, item.Phone.Address, df, new Rectangle((int)r.X + 44, (int)r.Y + 24, (int)r.Width - 54, 18), Theme.Dim, TextFormatFlags.EndEllipsis);
+        using var tf = Theme.PxFont(9.75f, k, true);
+        using var df = Theme.PxFont(8.5f, k);
+        int x = (int)(r.X + 44 * k), w = (int)(r.Width - 54 * k);
+        TextRenderer.DrawText(g, name, tf, new Rectangle(x, (int)(r.Y + 6 * k), w, (int)(20 * k)), Theme.Fore, TextFormatFlags.EndEllipsis);
+        TextRenderer.DrawText(g, item.Phone.Address, df, new Rectangle(x, (int)(r.Y + 24 * k), w, (int)(18 * k)), Theme.Dim, TextFormatFlags.EndEllipsis);
     }
 
     async Task DiscoverAsync()

@@ -36,6 +36,10 @@
     <string name="notify_missing">Needed to confirm installs from the background</string>
 
     <string name="section_pcs">Computers</string>
+    <string name="section_look">Appearance</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <string name="step1">Start PhoneDrop on your PC</string>
     <string name="step2">Click ⋯ → Pair phone and pick this one</string>
     <string name="step3">Type the PIN from the card above – then drag files</string>

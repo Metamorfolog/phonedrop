@@ -53,6 +53,14 @@ Výsledek: `windows/publish/PhoneDrop.exe` (~260 kB, potřebuje .NET 10 Desktop 
 - Google Play Protect může u nového/neznámého APK nabídnout sken – *Další podrobnosti → Instalovat bez skenování*.
 - Okénko ve Windows čeká na výsledek a ukáže *nainstalováno ✓ / zrušeno / selhalo (důvod)*.
 
+## Vzhled
+
+Světlý i tmavý, výchozí podle systému (stejné barvy na obou stranách).
+
+- **Windows:** ⋯ → *Vzhled* (Automaticky / Světlý / Tmavý), nebo `PhoneDrop.exe --theme auto|light|dark`.
+  V režimu „Automaticky“ se okno přebarví samo, když ve Windows přepneš režim aplikací.
+- **Android:** sekce *Vzhled* dole v appce (Systém / Světlý / Tmavý).
+
 ## Jazyky
 
 Čeština a angličtina, výchozí podle jazyka systému.

@@ -14,7 +14,9 @@ static class Program
     [STAThread]
     static int Main(string[] args)
     {
-        L.Init(Config.Load().Language);
+        var startup = Config.Load();
+        L.Init(startup.Language);
+        Theme.Init(startup.Appearance);
         if (args.Length > 0 && args[0].StartsWith("--")) return Cli.Run(args);
 
         var files = args.Where(a => File.Exists(a) || Directory.Exists(a)).ToArray();

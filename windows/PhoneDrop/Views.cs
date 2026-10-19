@@ -3,7 +3,10 @@ using System.Drawing.Drawing2D;
 
 namespace PhoneDrop;
 
-/// <summary>Kreslené prvky hlavního okna.</summary>
+/// <summary>
+/// Kreslené prvky hlavního okna. Kreslí se v logických jednotkách (96 DPI) přes ScaleTransform;
+/// text (TextRenderer měřítko grafiky ignoruje) dostává fyzické obdélníky a písmo v pixelech podle DPI monitoru.
+/// </summary>
 abstract class PaintedControl : Control
 {
     protected PaintedControl()
@@ -11,6 +14,33 @@ abstract class PaintedControl : Control
         SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer
                  | ControlStyles.ResizeRedraw | ControlStyles.SupportsTransparentBackColor, true);
         BackColor = Theme.Back;
+    }
+
+    /// <summary>Měřítko monitoru (1 = 100 %).</summary>
+    protected float K => DeviceDpi / 96f;
+    /// <summary>Logická šířka a výška.</summary>
+    protected float W => Width / K;
+    protected float H => Height / K;
+
+    protected Graphics Begin(PaintEventArgs e)
+    {
+        var g = e.Graphics.Smooth();
+        g.Clear(BackColor);
+        g.ScaleTransform(K, K);
+        return g;
+    }
+
+    protected Font Px(float pt, bool semibold = false) => Theme.PxFont(pt, K, semibold);
+
+    protected void DrawText(Graphics g, string s, Font f, RectangleF r, Color c, TextFormatFlags flags) =>
+        TextRenderer.DrawText(g, s, f, Rectangle.Round(new RectangleF(r.X * K, r.Y * K, r.Width * K, r.Height * K)), c, flags);
+
+    protected float MeasureWidth(string s, Font f) => TextRenderer.MeasureText(s, f).Width / K;
+
+    protected override void OnDpiChangedAfterParent(EventArgs e)
+    {
+        base.OnDpiChangedAfterParent(e);
+        Invalidate();
     }
 
     /// <summary>Telefon: obrys s displejem (pro hlavičku i párovací dialog).</summary>
@@ -38,10 +68,10 @@ sealed class PhoneHeader : PaintedControl
 
     protected override void OnPaint(PaintEventArgs e)
     {
-        var g = e.Graphics.Smooth();
-        g.Clear(BackColor);
-        int s = Height - 16;
+        var g = Begin(e);
+        float s = H - 16;
         var tile = new RectangleF(14, 8, s, s);
+        Theme.CardShadow(g, tile, 10);
         using (var path = Theme.Rounded(tile, 10))
         using (var fill = new SolidBrush(Theme.Surface))
             g.FillPath(fill, path);
@@ -49,14 +79,12 @@ sealed class PhoneHeader : PaintedControl
             connected ? Theme.Accent : Theme.Dim, 1.8f);
 
         float x = tile.Right + 12;
-        using var title = Theme.Semibold(10.5f);
-        using var small = Theme.UiFont(8.75f);
-        TextRenderer.DrawText(g, name, title, new Rectangle((int)x, 8, Width - (int)x - 50, 26), Theme.Fore,
-            TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+        using var title = Px(10.5f, true);
+        using var small = Px(8.75f);
+        DrawText(g, name, title, new RectangleF(x, 9, W - x - 52, 24), Theme.Fore, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
         using (var dot = new SolidBrush(connected ? Theme.Accent : Theme.Dim))
             g.FillEllipse(dot, x + 1, 37, 7, 7);
-        TextRenderer.DrawText(g, detail, small, new Rectangle((int)x + 13, 31, Width - (int)x - 60, 20), Theme.Dim,
-            TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+        DrawText(g, detail, small, new RectangleF(x + 13, 32, W - x - 62, 18), Theme.Dim, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
     }
 }
 
@@ -72,15 +100,14 @@ sealed class MoreButton : PaintedControl
 
     protected override void OnPaint(PaintEventArgs e)
     {
-        var g = e.Graphics.Smooth();
-        g.Clear(BackColor);
+        var g = Begin(e);
         if (hover)
         {
             using var b = new SolidBrush(Theme.Surface2);
-            g.FillEllipse(b, 0, 0, Width - 1, Height - 1);
+            g.FillEllipse(b, 0, 0, W - 1, H - 1);
         }
         using var dot = new SolidBrush(Theme.Fore);
-        for (int i = -1; i <= 1; i++) g.FillEllipse(dot, Width / 2f + i * 6 - 1.75f, Height / 2f - 1.75f, 3.5f, 3.5f);
+        for (int i = -1; i <= 1; i++) g.FillEllipse(dot, W / 2f + i * 6 - 1.75f, H / 2f - 1.75f, 3.5f, 3.5f);
     }
 }
 
@@ -121,9 +148,9 @@ sealed class DropZone : PaintedControl
 
     protected override void OnPaint(PaintEventArgs e)
     {
-        var g = e.Graphics.Smooth();
-        g.Clear(BackColor);
-        var r = new RectangleF(1, 1, Width - 3, Height - 3);
+        var g = Begin(e);
+        var r = new RectangleF(2, 1, W - 5, H - (Theme.IsDark ? 3 : 7));
+        Theme.CardShadow(g, r, 16);
         using var path = Theme.Rounded(r, 16);
         using (var fill = new SolidBrush(Theme.Mix(Theme.Surface, Theme.Accent, glow * 0.12f)))
             g.FillPath(fill, path);
@@ -131,7 +158,7 @@ sealed class DropZone : PaintedControl
             g.DrawPath(pen, path);
 
         // Ilustrace: kruh, v něm šipka dolů nad „miskou“.
-        float cx = Width / 2f, cy = Height / 2f - 34;
+        float cx = W / 2f, cy = H / 2f - 34;
         float rad = 30 + glow * 3;
         using (var circle = new SolidBrush(Color.FromArgb((int)(28 + glow * 40), Theme.Accent)))
             g.FillEllipse(circle, cx - rad, cy - rad, rad * 2, rad * 2);
@@ -144,15 +171,13 @@ sealed class DropZone : PaintedControl
             g.DrawLines(pen, [new PointF(cx - 13, cy + 6), new PointF(cx - 13, cy + 13), new PointF(cx + 13, cy + 13), new PointF(cx + 13, cy + 6)]);
         }
 
-        using var big = Theme.Semibold(12.5f);
-        using var small = Theme.UiFont(8.75f);
-        int ty = (int)(cy + rad + 12);
-        TextRenderer.DrawText(g, hot ? L.DropHot : L.DropTitle, big,
-            new Rectangle(0, ty, Width, 26), hot ? Theme.Accent : Theme.Fore, TextFormatFlags.HorizontalCenter);
-        TextRenderer.DrawText(g, L.DropClick, small,
-            new Rectangle(10, ty + 28, Width - 20, 18), Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
-        TextRenderer.DrawText(g, L.DropApk, small,
-            new Rectangle(10, ty + 46, Width - 20, 18), Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
+        using var big = Px(12.5f, true);
+        using var small = Px(8.75f);
+        float ty = cy + rad + 12;
+        DrawText(g, hot ? L.DropHot : L.DropTitle, big, new RectangleF(6, ty, W - 12, 26), hot ? Theme.Accent : Theme.Fore,
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
+        DrawText(g, L.DropClick, small, new RectangleF(10, ty + 28, W - 20, 18), Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
+        DrawText(g, L.DropApk, small, new RectangleF(10, ty + 46, W - 20, 18), Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
     }
 }
 
@@ -188,16 +213,16 @@ sealed class StatusCard : PaintedControl
 
     protected override void OnPaint(PaintEventArgs e)
     {
-        var g = e.Graphics.Smooth();
-        g.Clear(BackColor);
-        var r = new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f);
+        var g = Begin(e);
+        var r = new RectangleF(2, 0.5f, W - 5, H - (Theme.IsDark ? 1.5f : 6));
+        Theme.CardShadow(g, r, 14);
         using (var path = Theme.Rounded(r, 14))
         using (var fill = new SolidBrush(Theme.Surface))
             g.FillPath(fill, path);
 
         // Ikona stavu.
         var color = kind switch { CardKind.Ok => Theme.Accent, CardKind.Error => Theme.Bad, CardKind.Busy => Theme.Accent, _ => Theme.Dim };
-        float ix = 16, iy = Height / 2f - 13, d = 26;
+        float ix = 16, d = 26, iy = r.Y + r.Height / 2f - d / 2;
         using (var bg = new SolidBrush(Color.FromArgb(kind == CardKind.Info ? 40 : 38, color)))
             g.FillEllipse(bg, ix, iy, d, d);
         using (var pen = new Pen(color, 2.2f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
@@ -222,30 +247,30 @@ sealed class StatusCard : PaintedControl
             }
         }
 
-        int x = (int)(ix + d + 12);
-        int right = Width - 14;
-        using var tf = Theme.Semibold(9.75f);
-        using var df = Theme.UiFont(8.75f);
+        float x = ix + d + 12;
+        float right = r.Right - 12;
+        using var tf = Px(9.75f, true);
+        using var df = Px(8.75f);
         if (queued > 0)
         {
             var q = $"+{queued}";
-            var qs = TextRenderer.MeasureText(q, df);
-            var pill = new RectangleF(right - qs.Width - 8, 12, qs.Width + 8, 20);
+            float qw = MeasureWidth(q, df);
+            var pill = new RectangleF(right - qw - 8, r.Y + 11, qw + 8, 20);
             using (var pp = Theme.Rounded(pill, 10))
             using (var pb = new SolidBrush(Theme.Surface2))
                 g.FillPath(pb, pp);
-            TextRenderer.DrawText(g, q, df, Rectangle.Round(pill), Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-            right = (int)pill.X - 6;
+            DrawText(g, q, df, pill, Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            right = pill.X - 6;
         }
         bool bar = progress.HasValue;
-        int top = bar ? 11 : (Height - 40) / 2;
-        TextRenderer.DrawText(g, title, tf, new Rectangle(x, top - 1, right - x, 22), Theme.Fore, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
-        TextRenderer.DrawText(g, detail, df, new Rectangle(x, top + 20, Width - 14 - x, 20),
+        float top = bar ? r.Y + 10 : r.Y + (r.Height - 40) / 2;
+        DrawText(g, title, tf, new RectangleF(x, top - 1, right - x, 22), Theme.Fore, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+        DrawText(g, detail, df, new RectangleF(x, top + 20, r.Right - 12 - x, 20),
             kind == CardKind.Error ? Theme.Mix(Theme.Bad, Theme.Fore, 0.3f) : Theme.Dim, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
 
         if (bar)
         {
-            var track = new RectangleF(x, Height - 15, Width - 14 - x, 5);
+            var track = new RectangleF(x, r.Bottom - 14, r.Right - 12 - x, 5);
             using (var tp = Theme.Rounded(track, 2.5f))
             using (var tb = new SolidBrush(Theme.Surface2))
                 g.FillPath(tb, tp);

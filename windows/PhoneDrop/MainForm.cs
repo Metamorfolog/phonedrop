@@ -31,11 +31,17 @@ public sealed class MainForm : Form
         Font = Theme.UiFont(9.5f);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
+        // Rozměry níž jsou pro 96 DPI; WinForms je při načtení přepočítá na DPI monitoru.
+        AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
         ClientSize = new Size(400, 380);
         StartPosition = FormStartPosition.Manual;
-        var wa = Screen.PrimaryScreen!.WorkingArea;
-        Location = new Point(wa.Right - Width - 24, wa.Bottom - Height - 24);
+        // Do pravého dolního rohu – až po přepočtu na DPI, kdy je známá skutečná velikost.
+        Load += (_, _) =>
+        {
+            var wa = Screen.FromControl(this).WorkingArea;
+            Location = new Point(Math.Max(wa.Left, wa.Right - Width - 24), Math.Max(wa.Top, wa.Bottom - Height - 24));
+        };
         TopMost = config.TopMost;
 
         header = new PhoneHeader { Dock = DockStyle.Top, Height = 62 };
@@ -61,6 +67,11 @@ public sealed class MainForm : Form
         }
         langItem.DropDown.BackColor = Theme.Surface;
         menu.Items.Add(langItem);
+        var themeItem = new ToolStripMenuItem(L.MenuTheme);
+        foreach (var (code, name) in new[] { ("auto", L.ThemeAuto), ("light", L.ThemeLight), ("dark", L.ThemeDark) })
+            themeItem.DropDownItems.Add(new ToolStripMenuItem(name, null, (_, _) => SetAppearance(code)) { Checked = config.Appearance == code });
+        themeItem.DropDown.BackColor = Theme.Surface;
+        menu.Items.Add(themeItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(L.MenuQuit, null, (_, _) => Quit());
         foreach (ToolStripItem item in menu.Items) item.Padding = new Padding(4, 5, 12, 5);
@@ -109,7 +120,8 @@ public sealed class MainForm : Form
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
-        Theme.DarkTitleBar(this);
+        Microsoft.Win32.SystemEvents.UserPreferenceChanged += OnSystemPreferences;
+        Theme.TitleBar(this);
     }
 
     void OnDrag(DragEventArgs e)
@@ -231,6 +243,24 @@ public sealed class MainForm : Form
         Quit();
     }
 
+    void SetAppearance(string code)
+    {
+        config.Appearance = code;
+        config.Save();
+        Theme.Init(code);
+        Program.Restart = true;
+        Quit();
+    }
+
+    /// <summary>Při „auto“ sleduje přepnutí světlého/tmavého režimu ve Windows a okno přebarví.</summary>
+    void OnSystemPreferences(object? sender, Microsoft.Win32.UserPreferenceChangedEventArgs e)
+    {
+        if (config.Appearance != "auto" || e.Category != Microsoft.Win32.UserPreferenceCategory.General) return;
+        bool wasDark = Theme.IsDark;
+        Theme.Init("auto");
+        if (Theme.IsDark != wasDark) BeginInvoke(() => { Program.Restart = true; Quit(); });
+    }
+
     void ToggleTopMost()
     {
         TopMost = !TopMost;
@@ -266,6 +296,7 @@ public sealed class MainForm : Form
             }
             return;
         }
+        Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnSystemPreferences;
         tray.Dispose();
         base.OnFormClosing(e);
     }

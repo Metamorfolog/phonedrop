@@ -83,6 +83,11 @@ static class Cli
                 if (args[1] == "off") SendTo.Uninstall(); else SendTo.Install();
                 Console.WriteLine(SendTo.Installed ? L.CliSendToOn : L.CliSendToOff);
                 return 0;
+            case "--theme" when args.Length >= 2:
+                config.Appearance = args[1] is "light" or "dark" ? args[1] : "auto";
+                config.Save();
+                Console.WriteLine(L.CliTheme(config.Appearance));
+                return 0;
             case "--lang" when args.Length >= 2:
                 config.Language = args[1];
                 config.Save();
