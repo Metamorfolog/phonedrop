@@ -1,12 +1,14 @@
 # PhoneDrop
 
-**English** · [Čeština](README.cs.md)
+**English** · [Čeština](README.cs.md) · **Website: [phonedrop.apexpiksel.cz](https://phonedrop.apexpiksel.cz)**
 
 Drag a file into a small window on Windows and it lands on your Android phone. APKs open the system
 installer right away: one tap on **Install** and you're done. No cable, no `adb`, no wireless debugging.
 
 - **APK** → the phone opens the Android installer (a single tap to confirm; silent installs aren't possible without root or ADB).
-- **Anything else** → saved to `Downloads/Drop`, with a notification that opens it.
+- **Split APKs** (`.apks` from SAI or bundletool, `.xapk`) → all the APKs inside go into one install.
+- **Anything else** → saved to `Downloads/Drop`, with a notification that opens it. Drop several files at once or
+  a whole folder: it lands as `Downloads/Drop/<folder>/…` with its subfolders.
 - Works on your local network. The PC finds the phone by itself (mDNS), even when its IP address changes.
 - Light and dark theme, English and Czech, on both sides.
 - Both apps update themselves from GitHub Releases (the download is checked against `SHA256SUMS.txt`;
@@ -88,7 +90,8 @@ Testing with the Android emulator: it sits behind NAT, so forward the port and p
 
 - Local network only. Traffic is plain HTTP with a pairing token, fine for a home Wi-Fi, not for public networks.
   A relay for use outside the home network is planned (see PROTOCOL.md).
-- Folders and split APKs (`.apks`, `.xapk`) aren't supported yet.
+- OBB data inside `.xapk` files is skipped (Android 11+ doesn't let apps write into another app's `obb` folder).
+  `.apkm` (encrypted APKMirror bundles) isn't supported.
 
 ## License
 

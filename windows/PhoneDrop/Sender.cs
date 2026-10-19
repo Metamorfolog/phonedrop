@@ -44,9 +44,13 @@ public sealed class Sender(Config config)
         e is HttpRequestException || (e is OperationCanceledException && !ct.IsCancellationRequested);
 
     /// <summary>Pošle soubor; u APK počká, až ho uživatel v telefonu potvrdí.</summary>
-    public async Task<Outcome> SendFileAsync(IPhoneLink link, string file, CancellationToken ct)
+    public async Task<Outcome> SendFileAsync(IPhoneLink link, string file, CancellationToken ct) =>
+        await SendFileAsync(link, new DropItem(file, null), ct);
+
+    public async Task<Outcome> SendFileAsync(IPhoneLink link, DropItem item, CancellationToken ct)
     {
-        var name = Path.GetFileName(file);
+        var file = item.Path;
+        var name = item.Dir == null ? Path.GetFileName(file) : item.Dir + "/" + Path.GetFileName(file);
         long total = Math.Max(1, new FileInfo(file).Length);
         var started = DateTime.UtcNow;
         var progress = new Progress<long>(done =>
@@ -56,7 +60,7 @@ public sealed class Sender(Config config)
             Report(name, L.Progress(Size(done), Size(total), speed), (double)done / total);
         });
         Report(name, L.Connecting, 0);
-        var result = await link.SendAsync(file, progress, ct);
+        var result = await link.SendAsync(file, item.Dir, progress, ct);
 
         if (result.Kind != "apk") return new Outcome(true, name, L.SavedTo(result.Path!));
 

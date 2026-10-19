@@ -16,7 +16,7 @@
     <string name="recv_on">Počítač telefon najde v síti</string>
     <string name="recv_off">Vypnuto – počítač telefon nenajde</string>
     <string name="storage_title">Ukládání</string>
-    <string name="storage_sub">Stažené › Drop  ·  APK rovnou k instalaci</string>
+    <string name="storage_sub">Stažené › Drop, i složky  ·  APK, APKS, XAPK k instalaci</string>
 
     <string name="section_setup">Nastavení</string>
     <string name="setup_done">vše hotovo</string>
@@ -64,6 +64,12 @@
     <string name="n_receiving">Přijímám %1$s</string>
     <string name="n_saved">Uloženo: %1$s</string>
     <string name="n_saved_where">Stažené › Drop</string>
+    <plurals name="n_saved_many">
+        <item quantity="one">Uložen %d soubor</item>
+        <item quantity="few">Uloženy %d soubory</item>
+        <item quantity="many">Uloženo %d souboru</item>
+        <item quantity="other">Uloženo %d souborů</item>
+    </plurals>
     <string name="n_install">Instalovat %1$s</string>
     <string name="n_install_text">Ťukni a potvrď instalaci</string>
     <string name="n_installed">Nainstalováno</string>

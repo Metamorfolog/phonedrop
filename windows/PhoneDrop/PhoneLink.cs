@@ -17,7 +17,7 @@ public interface IPhoneLink
 {
     string Describe { get; }
     Task PingAsync(CancellationToken ct);
-    Task<SendResult> SendAsync(string file, IProgress<long> progress, CancellationToken ct);
+    Task<SendResult> SendAsync(string file, string? dir, IProgress<long> progress, CancellationToken ct);
     Task<string> InstallStateAsync(int session, CancellationToken ct);
 }
 
@@ -58,9 +58,11 @@ public sealed class LanLink(string address, string token) : IPhoneLink
         Check(res, await ReadJson(res, cts.Token));
     }
 
-    public async Task<SendResult> SendAsync(string file, IProgress<long> progress, CancellationToken ct)
+    public async Task<SendResult> SendAsync(string file, string? dir, IProgress<long> progress, CancellationToken ct)
     {
-        using var req = Request(HttpMethod.Put, "/upload?name=" + Uri.EscapeDataString(System.IO.Path.GetFileName(file)));
+        var query = "/upload?name=" + Uri.EscapeDataString(System.IO.Path.GetFileName(file));
+        if (!string.IsNullOrEmpty(dir)) query += "&dir=" + Uri.EscapeDataString(dir);
+        using var req = Request(HttpMethod.Put, query);
         req.Content = new ProgressContent(file, progress);
         // Telefon nejdřív zkontroluje token a volné místo; tělo se pošle až po "100 Continue".
         req.Headers.ExpectContinue = true;

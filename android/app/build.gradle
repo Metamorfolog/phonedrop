@@ -18,8 +18,8 @@ android {
         minSdk 29
         targetSdk 36
         // Verzi jde pro testy aktualizací přepsat: -PverCode=… -PverName=…
-        versionCode Integer.parseInt((project.findProperty('verCode') ?: '2').toString())
-        versionName((project.findProperty('verName') ?: '1.1.0').toString())
+        versionCode Integer.parseInt((project.findProperty('verCode') ?: '3').toString())
+        versionName((project.findProperty('verName') ?: '1.2.0').toString())
         // Odkud se berou aktualizace (poslední vydání na GitHubu); pro testy -PupdateUrl=…
         buildConfigField 'String', 'UPDATE_URL',
                 "\"${project.findProperty('updateUrl') ?: 'https://api.github.com/repos/Metamorfolog/phonedrop/releases/latest'}\""

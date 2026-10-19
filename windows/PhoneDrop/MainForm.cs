@@ -7,7 +7,7 @@ public sealed class MainForm : Form
 
     readonly Config config = Config.Load();
     readonly Sender sender;
-    readonly Queue<string> queue = new();
+    readonly Queue<DropItem> queue = new();
     readonly NotifyIcon tray;
     readonly PhoneHeader header;
     readonly DropZone zone;
@@ -177,12 +177,7 @@ public sealed class MainForm : Form
     public void Enqueue(string[] paths, bool bringToFront = false)
     {
         if (bringToFront) ShowWindow();
-        var files = new List<string>();
-        foreach (var p in paths)
-        {
-            if (File.Exists(p)) files.Add(p);
-            else if (Directory.Exists(p)) card.Set(CardKind.Error, Path.GetFileName(p), L.NoFolders);
-        }
+        var files = DropItem.Expand(paths);
         foreach (var f in files) queue.Enqueue(f);
         if (files.Count > 0 && !busy) _ = ProcessQueueAsync();
     }
@@ -199,15 +194,15 @@ public sealed class MainForm : Form
             SetOnline(true);
             while (queue.Count > 0)
             {
-                var file = queue.Dequeue();
+                var item = queue.Dequeue();
                 Outcome r;
                 try
                 {
-                    r = await sender.SendFileAsync(link, file, CancellationToken.None);
+                    r = await sender.SendFileAsync(link, item, CancellationToken.None);
                 }
                 catch (Exception e) when (e is PhoneException or IOException or HttpRequestException or UnauthorizedAccessException)
                 {
-                    r = new Outcome(false, Path.GetFileName(file), e.Message);
+                    r = new Outcome(false, Path.GetFileName(item.Path), e.Message);
                 }
                 results.Add(r);
                 card.Set(r.Ok ? CardKind.Ok : CardKind.Error, r.Title, r.Detail, null, queue.Count);

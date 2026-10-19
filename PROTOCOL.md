@@ -8,7 +8,7 @@ V síti se ohlašuje přes mDNS/DNS-SD jako `_phonedrop._tcp` s TXT `id=<UUID te
 | `GET /info` | – | `{"ok":true,"app":"PhoneDrop","v":1,"id":"…","name":"Pixel 8"}` |
 | `POST /pair?pin=123456&client=PC` | – | `{"ok":true,"token":"…","id":"…","name":"…"}` nebo 403 |
 | `GET /ping` | Bearer | `{"ok":true,"id":"…","name":"…"}` nebo 401 |
-| `PUT /upload?name=<název>` + `Content-Length` | Bearer | soubor: `{"ok":true,"kind":"file","path":"Download/Drop/x.pdf"}`<br>APK: `{"ok":true,"kind":"apk","session":42,"canInstall":true}` |
+| `PUT /upload?name=<název>[&dir=<podsložka>]` + `Content-Length` | Bearer | soubor: `{"ok":true,"kind":"file","path":"Download/Drop/x.pdf"}`<br>APK: `{"ok":true,"kind":"apk","session":42,"canInstall":true}` |
 | `GET /install?session=42` | Bearer | `{"ok":true,"state":"pending|confirm|installed|aborted|failed: …|unknown"}` |
 
 - **Párování:** jen když je appka v telefonu otevřená (a 2 min po jejím opuštění), jinak 403 `pairing_closed`.
@@ -19,6 +19,11 @@ V síti se ohlašuje přes mDNS/DNS-SD jako `_phonedrop._tcp` s TXT `id=<UUID te
   `no_length`, `not_found`, `bad_request`, `failed`. Text do jazyka uživatele překládá klient podle `code`.
 - **Volné místo:** klient posílá `Expect: 100-continue`; telefon nejdřív ověří token a místo (APK počítá dvojnásobek)
   a buď odpoví `100 Continue`, nebo rovnou `507 {"code":"no_space",…}` – tělo se pak vůbec neposílá.
+- **Složky:** počítač posílá soubory jednotlivě s `dir` = cesta podsložky (`Dovolená/den 1`); telefon z ní
+  vezme jen bezpečné části (žádné `..`, absolutní cesty ani řídicí znaky, nejvýš 12 úrovní) a uloží do
+  `Download/Drop/<dir>/`.
+- **Split APK:** `.apks` a `.xapk` se čtou proudem jako ZIP, všechna `.apk` (kromě `standalones/`) jdou do jedné
+  PackageInstaller session; odpověď má navíc `splits` a `obbSkipped`.
 - **Tělo uploadu** se čte proudem přímo do MediaStore (`Download/Drop`, kolize → „jméno (1).ext“) nebo do PackageInstaller session.
   Neúplný přenos se zahodí (soubor smazán / session zrušena).
 - **Bez šifrování:** provoz v LAN je čisté HTTP (token jde v hlavičce). Pro domácí Wi-Fi v pořádku, do cizích sítí ne.

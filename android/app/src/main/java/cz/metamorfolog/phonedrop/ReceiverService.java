@@ -223,7 +223,7 @@ public class ReceiverService extends Service {
         wifi.acquire();
         long[] last = {0};
         try {
-            JSONObject res = inbox.accept(name, req.contentLength, req.body, (done, total) -> {
+            JSONObject res = inbox.accept(name, req.query.get("dir"), req.contentLength, req.body, (done, total) -> {
                 long now = SystemClock.elapsedRealtime();
                 if (now - last[0] > 500 || done == total) {
                     last[0] = now;

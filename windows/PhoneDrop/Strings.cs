@@ -41,7 +41,6 @@ static class L
     public static string NotResponding(string msg) => Pick("Not responding: ", "Neodpovídá: ") + msg;
     public static string SentSummary(int ok, int all) => Pick($"Sent {ok} of {all}", $"Odesláno {ok} z {all}");
     public static string AllGood => Pick("all good", "vše v pořádku");
-    public static string NoFolders => Pick("Folders aren't supported yet – drop the files", "Složky zatím neposílám – přetáhni soubory");
     public static string PairedWith(string name) => Pick($"Paired with {name}", $"Spárováno s {name}");
     public static string DropHere => Pick("Drop a file here", "Přetáhni sem soubor");
     public static string Failed => Pick("That didn't work", "Nepodařilo se");

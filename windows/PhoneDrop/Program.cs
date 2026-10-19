@@ -30,7 +30,7 @@ static class Program
         if (args.Length > 0 && args[0].StartsWith("--")) return Cli.Run(args);
         Updater.CleanUp();
 
-        var files = args.Where(a => File.Exists(a) || Directory.Exists(a)).ToArray();
+        var files = args.Where(a => File.Exists(a) || Directory.Exists(a)).ToArray(); // složky rozbalí okno
         using var mutex = new Mutex(true, InstanceName, out bool first);
         if (!first)
         {

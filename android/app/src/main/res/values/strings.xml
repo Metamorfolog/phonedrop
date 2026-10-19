@@ -19,7 +19,7 @@
     <string name="recv_on">Your PC can find this phone on the network</string>
     <string name="recv_off">Off – your PC can\'t find this phone</string>
     <string name="storage_title">Storage</string>
-    <string name="storage_sub">Downloads › Drop  ·  APKs open the installer</string>
+    <string name="storage_sub">Downloads › Drop, folders too  ·  APK, APKS, XAPK install</string>
 
     <string name="section_setup">Setup</string>
     <string name="setup_done">all set</string>
@@ -67,6 +67,10 @@
     <string name="n_receiving">Receiving %1$s</string>
     <string name="n_saved">Saved: %1$s</string>
     <string name="n_saved_where">Downloads › Drop</string>
+    <plurals name="n_saved_many">
+        <item quantity="one">Saved %d file</item>
+        <item quantity="other">Saved %d files</item>
+    </plurals>
     <string name="n_install">Install %1$s</string>
     <string name="n_install_text">Tap to confirm the install</string>
     <string name="n_installed">Installed</string>

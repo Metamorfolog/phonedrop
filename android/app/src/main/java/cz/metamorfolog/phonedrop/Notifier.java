@@ -13,6 +13,7 @@ final class Notifier {
     static final int ID_SERVICE = 1;
     private static final int ID_PROGRESS = 2;
     private static final int ID_UPDATE = 3;
+    private static final int ID_SAVED = 4;
     private static final String CH_SERVICE = "service";
     private static final String CH_FILES = "files";
     private static final String CH_INSTALL = "install";
@@ -63,20 +64,35 @@ final class Notifier {
         nm(ctx).cancel(ID_PROGRESS);
     }
 
-    static void fileSaved(Context ctx, String name, Uri uri, String mime) {
-        Intent view = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime)
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-        PendingIntent open = PendingIntent.getActivity(ctx, name.hashCode(), view,
+    private static int burst;
+    private static long lastSaved;
+
+    /**
+     * Jedno oznámení na sérii souborů (třeba celou složku): jeden soubor ho otevře,
+     * víc souborů za sebou se sečte („Uloženo 12 souborů“) a ťuknutí otevře Stažené.
+     */
+    static synchronized void fileSaved(Context ctx, String name, Uri uri, String mime) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        burst = now - lastSaved < 15_000 ? burst + 1 : 1;
+        lastSaved = now;
+        Intent view = burst > 1
+                ? new Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                : new Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent open = PendingIntent.getActivity(ctx, ID_SAVED, view,
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         Notification n = new Notification.Builder(ctx, CH_FILES)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setColor(ctx.getColor(R.color.accent))
-                .setContentTitle(ctx.getString(R.string.n_saved, name))
-                .setContentText(ctx.getString(R.string.n_saved_where))
+                .setContentTitle(burst > 1
+                        ? ctx.getResources().getQuantityString(R.plurals.n_saved_many, burst, burst)
+                        : ctx.getString(R.string.n_saved, name))
+                .setContentText(burst > 1 ? name : ctx.getString(R.string.n_saved_where))
                 .setContentIntent(open)
+                .setOnlyAlertOnce(burst > 1)
                 .setAutoCancel(true)
                 .build();
-        nm(ctx).notify(name.hashCode(), n);
+        nm(ctx).notify(ID_SAVED, n);
     }
 
     /** Ťuknutí otevře PhoneDrop, který v popředí spustí systémové potvrzení instalace. */

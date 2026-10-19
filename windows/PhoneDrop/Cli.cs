@@ -63,11 +63,12 @@ static class Cli
                 };
                 var link = await sender.ConnectAsync(ct);
                 int failed = 0;
-                foreach (var file in args.Skip(1))
+                foreach (var item in DropItem.Expand(args.Skip(1)))
                 {
+                    var file = item.Path;
                     try
                     {
-                        var result = await sender.SendFileAsync(link, Path.GetFullPath(file), ct);
+                        var result = await sender.SendFileAsync(link, item, ct);
                         Console.WriteLine((Console.IsOutputRedirected ? "" : "\r") + result.ToString().PadRight(70));
                         if (!result.Ok) failed++;
                     }

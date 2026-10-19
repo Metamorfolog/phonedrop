@@ -1,11 +1,13 @@
 # PhoneDrop
 
-[English](README.md) · **Čeština**
+[English](README.md) · **Čeština** · **Web: [phonedrop.apexpiksel.cz](https://phonedrop.apexpiksel.cz)**
 
 Náhrada za „adb install“ přes wireless debugging: **přetáhni soubor do okénka ve Windows a je v telefonu.**
 
 - `.apk` → telefon rovnou otevře systémovou instalaci (jedno ťuknutí na **Instalovat**; tichá instalace bez rootu/ADB nejde).
-- ostatní soubory → `Stažené/Drop` (Download/Drop), s oznámením, které soubor otevře.
+- split APK (`.apks` ze SAI nebo bundletoolu, `.xapk`) → všechna APK z balíku jdou do jedné instalace.
+- ostatní soubory → `Stažené/Drop` (Download/Drop), s oznámením, které soubor otevře. Jde přetáhnout víc souborů
+  najednou i celou složku – v telefonu bude jako `Stažené/Drop/<složka>/…` i s podsložkami.
 - Funguje v místní síti (Wi-Fi). Telefon se najde sám přes mDNS, i když se mu změní IP.
 - Obě aplikace se aktualizují samy z GitHub Releases (soubor se ověří podle `SHA256SUMS.txt`, Android navíc
   přijme jen APK podepsané stejným klíčem).
@@ -102,4 +104,5 @@ PhoneDrop.exe --send app-debug.apk
 ## Omezení
 
 - Jen LAN; spojení je nešifrované HTTP s tokenem (viz PROTOCOL.md). Relay mimo domácí síť je připravený v rozhraní, ne hotový.
-- Složky se neposílají (jen soubory). Split APK (`.apks`, `.xapk`) zatím ne.
+- Data OBB uvnitř `.xapk` se vynechají (Android 11+ nepustí aplikace do cizí složky `obb`). `.apkm`
+  (šifrované balíky APKMirror) nejdou.
