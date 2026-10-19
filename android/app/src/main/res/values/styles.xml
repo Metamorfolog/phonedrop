@@ -10,4 +10,13 @@
     <color name="dim">#7A7A7A</color>
     <color name="accent">#7FD18B</color>
     <color name="warn">#F0A35E</color>
+    <color name="warnBg">#2A1F14</color>
+    <color name="bad">#F07171</color>
+    <color name="faint">#4A4A4A</color>
+    <color name="surface">#161616</color>
+    <color name="surface2">#262626</color>
+    <color name="line">#3A3A3A</color>
+    <color name="accentDim">#4D7FD18B</color>
+    <color name="accentBg">#1F2E21</color>
+    <color name="onAccent">#0C1E10</color>
 </resources>

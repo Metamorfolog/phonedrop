@@ -4,11 +4,12 @@ namespace PhoneDrop;
 public sealed class PairForm : Form
 {
     readonly ListBox list;
-    readonly TextBox address;
-    readonly TextBox pin;
+    readonly InputBox address;
+    readonly InputBox pin;
     readonly Label info;
-    readonly Button pair;
-    readonly Button search;
+    readonly Label empty;
+    readonly RoundButton pair;
+    readonly RoundButton search;
 
     public string Address { get; private set; } = "";
     public string Token { get; private set; } = "";
@@ -19,63 +20,117 @@ public sealed class PairForm : Form
     {
         Text = "Spárovat telefon";
         Icon = MainForm.AppIcon;
-        Font = new Font("Segoe UI", 9.5f);
+        Font = Theme.UiFont(9.5f);
+        BackColor = Theme.Back;
+        ForeColor = Theme.Fore;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
         AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(360, 330);
+        ClientSize = new Size(380, 446);
 
+        var title = new Label { Text = "Spárovat telefon", Font = Theme.Semibold(14f), Location = new Point(20, 16), AutoSize = true };
         var intro = new Label
         {
-            Text = "V telefonu otevři PhoneDrop. Vyber ho ze seznamu (nebo opiš adresu) a zadej PIN, který appka ukazuje.",
-            Location = new Point(12, 10), Size = new Size(336, 40),
+            Text = "V telefonu otevři PhoneDrop, vyber ho tady ze seznamu a opiš PIN, který ukazuje.",
+            ForeColor = Theme.Dim, Location = new Point(20, 48), AutoSize = true, MaximumSize = new Size(340, 0),
         };
-        list = new ListBox { Location = new Point(12, 54), Size = new Size(336, 96), IntegralHeight = false };
+
+        var found = new Label { Text = "TELEFONY V SÍTI", Font = Theme.Semibold(8f), ForeColor = Theme.Dim, Location = new Point(20, 108), AutoSize = true };
+        search = new RoundButton { Text = "Hledat znovu", Location = new Point(258, 102), Size = new Size(102, 28), Font = Theme.Semibold(8.5f) };
+        search.Click += async (_, _) => await DiscoverAsync();
+        list = new ListBox
+        {
+            Location = new Point(20, 136), Size = new Size(340, 104), IntegralHeight = false, BorderStyle = BorderStyle.None,
+            BackColor = Theme.Back, ForeColor = Theme.Fore, DrawMode = DrawMode.OwnerDrawFixed, ItemHeight = 52,
+        };
+        list.DrawItem += DrawPhone;
         list.SelectedIndexChanged += (_, _) =>
         {
-            if (list.SelectedItem is FoundItem f) address!.Text = f.Phone.Address;
+            if (list.SelectedItem is FoundItem f) address!.Box.Text = f.Phone.Address;
+            list.Invalidate();
         };
-        search = new Button { Text = "Hledat znovu", Location = new Point(12, 156), Size = new Size(110, 28) };
-        search.Click += async (_, _) => await DiscoverAsync();
 
-        var la = new Label { Text = "Adresa (IP:port):", Location = new Point(12, 198), AutoSize = true };
-        address = new TextBox { Location = new Point(130, 195), Size = new Size(218, 26), PlaceholderText = "192.168.1.20:8765" };
-        var lp = new Label { Text = "PIN z telefonu:", Location = new Point(12, 234), AutoSize = true };
-        pin = new TextBox { Location = new Point(130, 231), Size = new Size(100, 26), MaxLength = 7 };
+        var la = new Label { Text = "ADRESA", Font = Theme.Semibold(8f), ForeColor = Theme.Dim, Location = new Point(20, 254), AutoSize = true };
+        address = new InputBox { Location = new Point(20, 274), Width = 200 };
+        address.Box.PlaceholderText = "192.168.1.20:8765";
+        var lp = new Label { Text = "PIN", Font = Theme.Semibold(8f), ForeColor = Theme.Dim, Location = new Point(232, 254), AutoSize = true };
+        pin = new InputBox(10.5f) { Location = new Point(232, 274), Width = 128 };
+        pin.Box.Font = new Font("Consolas", 12f, FontStyle.Bold);
+        pin.Box.MaxLength = 7;
+        pin.Box.PlaceholderText = "000 000";
+        pin.Box.TextAlign = HorizontalAlignment.Center;
+        pin.Height = address.Height;
 
-        info = new Label { Location = new Point(12, 264), Size = new Size(336, 24), ForeColor = Color.DimGray, AutoEllipsis = true };
-        pair = new Button { Text = "Spárovat", Location = new Point(176, 292), Size = new Size(84, 30) };
+        info = new Label { Location = new Point(20, 330), AutoSize = true, MaximumSize = new Size(340, 0), ForeColor = Theme.Dim };
+        empty = new Label
+        {
+            Location = list.Location, Size = list.Size, TextAlign = ContentAlignment.MiddleCenter,
+            ForeColor = Theme.Dim, BackColor = Theme.Surface, Text = "Hledám…",
+        };
+        pair = new RoundButton { Text = "Spárovat", Primary = true, Location = new Point(250, 392), Size = new Size(110, 36) };
         pair.Click += async (_, _) => await PairAsync();
-        var cancel = new Button { Text = "Zrušit", Location = new Point(264, 292), Size = new Size(84, 30), DialogResult = DialogResult.Cancel };
+        var cancel = new RoundButton { Text = "Zrušit", Location = new Point(132, 392), Size = new Size(110, 36), DialogResult = DialogResult.Cancel };
         AcceptButton = pair;
         CancelButton = cancel;
 
-        Controls.AddRange([intro, list, search, la, address, lp, pin, info, pair, cancel]);
+        Controls.AddRange([title, intro, found, search, empty, list, la, address, lp, pin, info, pair, cancel]);
         Shown += async (_, _) => await DiscoverAsync();
+    }
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        Theme.DarkTitleBar(this);
     }
 
     sealed record FoundItem(FoundPhone Phone)
     {
-        public override string ToString() => $"{Phone.Instance}   {Phone.Address}";
+        public override string ToString() => Phone.Instance;
+    }
+
+    /// <summary>Položka seznamu jako karta: ikona telefonu, název a adresa; vybraná má zelený rámeček.</summary>
+    void DrawPhone(object? sender, DrawItemEventArgs e)
+    {
+        var g = e.Graphics.Smooth();
+        using (var bg = new SolidBrush(Theme.Back)) g.FillRectangle(bg, e.Bounds);
+        if (e.Index < 0 || list.Items[e.Index] is not FoundItem item) return;
+        bool selected = (e.State & DrawItemState.Selected) != 0;
+        var r = new RectangleF(e.Bounds.X + 0.5f, e.Bounds.Y + 2.5f, e.Bounds.Width - 1.5f, e.Bounds.Height - 6);
+        using (var path = Theme.Rounded(r, 12))
+        {
+            using var fill = new SolidBrush(selected ? Theme.Mix(Theme.Surface, Theme.Accent, 0.10f) : Theme.Surface);
+            g.FillPath(fill, path);
+            if (selected) { using var pen = new Pen(Theme.Accent, 1.4f); g.DrawPath(pen, path); }
+        }
+        PaintedControl.DrawPhone(g, new RectangleF(r.X + 16, r.Y + 11, 13, 22), selected ? Theme.Accent : Theme.Dim, 1.6f);
+        var name = item.Phone.Instance.StartsWith("PhoneDrop ") ? item.Phone.Instance[10..] : item.Phone.Instance;
+        using var tf = Theme.Semibold(9.75f);
+        using var df = Theme.UiFont(8.5f);
+        TextRenderer.DrawText(g, name, tf, new Rectangle((int)r.X + 44, (int)r.Y + 6, (int)r.Width - 54, 20), Theme.Fore, TextFormatFlags.EndEllipsis);
+        TextRenderer.DrawText(g, item.Phone.Address, df, new Rectangle((int)r.X + 44, (int)r.Y + 24, (int)r.Width - 54, 18), Theme.Dim, TextFormatFlags.EndEllipsis);
     }
 
     async Task DiscoverAsync()
     {
         search.Enabled = false;
+        if (list.Items.Count == 0) { list.Visible = false; empty.Text = "Hledám…"; }
+        info.ForeColor = Theme.Dim;
         info.Text = "Hledám telefony v síti…";
         try
         {
             var found = await Mdns.DiscoverAsync();
             list.Items.Clear();
             foreach (var f in found) list.Items.Add(new FoundItem(f));
+            list.Visible = found.Count > 0;
+            empty.Text = "Žádný telefon v síti\nBěží v něm PhoneDrop?";
             if (found.Count > 0)
             {
                 list.SelectedIndex = 0;
-                info.Text = "Nalezeno: " + found.Count;
-                pin.Focus();
+                info.Text = found.Count == 1 ? "Našel jsem jeden telefon – zadej PIN." : $"Nalezeno telefonů: {found.Count}";
+                pin.Box.Focus();
             }
-            else info.Text = "Nic nenalezeno – zadej adresu z appky v telefonu.";
+            else info.Text = "Nic nenalezeno – zadej adresu, kterou ukazuje appka v telefonu.";
         }
         catch (Exception e)
         {
@@ -89,11 +144,14 @@ public sealed class PairForm : Form
 
     async Task PairAsync()
     {
-        var addr = address.Text.Trim();
+        var addr = address.Box.Text.Trim();
+        info.ForeColor = Theme.Bad;
         if (addr.Length == 0) { info.Text = "Zadej adresu telefonu."; return; }
         if (!addr.Contains(':')) addr += ":8765";
-        var code = new string(pin.Text.Where(char.IsDigit).ToArray());
+        var code = new string(pin.Box.Text.Where(char.IsDigit).ToArray());
+        if (code.Length != 6) { info.Text = "PIN má 6 číslic."; return; }
         pair.Enabled = false;
+        info.ForeColor = Theme.Dim;
         info.Text = "Páruji…";
         try
         {
@@ -104,6 +162,7 @@ public sealed class PairForm : Form
         }
         catch (Exception e)
         {
+            info.ForeColor = Theme.Bad;
             info.Text = e is PhoneException ? e.Message : "Telefon neodpovídá: " + e.Message;
         }
         finally

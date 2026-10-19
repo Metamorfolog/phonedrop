@@ -9,12 +9,14 @@ import android.content.pm.PackageInstaller;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.StatFs;
 import android.provider.MediaStore;
 import android.webkit.MimeTypeMap;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,6 +41,16 @@ final class Inbox {
 
     static boolean isApk(String name) {
         return name.toLowerCase(Locale.ROOT).endsWith(".apk");
+    }
+
+    /** Vrátí chybovou hlášku, když se soubor do telefonu nevejde (APK potřebuje místo i pro instalaci). */
+    String checkSpace(String name, long length) {
+        File dir = isApk(name) ? Environment.getDataDirectory() : Environment.getExternalStorageDirectory();
+        long free = new StatFs(dir.getPath()).getAvailableBytes();
+        long need = (isApk(name) ? 2 * length : length) + 16L * 1024 * 1024;
+        if (free >= need) return null;
+        return String.format(Locale.ROOT, "V telefonu není místo: potřeba %d MB, volno %d MB",
+                need / 1048576, free / 1048576);
     }
 
     JSONObject accept(String name, long length, InputStream in, Progress progress) throws IOException, JSONException {

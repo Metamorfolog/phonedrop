@@ -63,6 +63,8 @@ public sealed class LanLink(string address, string token) : IPhoneLink
     {
         using var req = Request(HttpMethod.Put, "/upload?name=" + Uri.EscapeDataString(System.IO.Path.GetFileName(file)));
         req.Content = new ProgressContent(file, progress);
+        // Telefon nejdřív zkontroluje token a volné místo; tělo se pošle až po "100 Continue".
+        req.Headers.ExpectContinue = true;
         using var res = await Http.SendAsync(req, ct);
         var json = await ReadJson(res, ct);
         Check(res, json);

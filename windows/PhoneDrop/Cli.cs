@@ -65,8 +65,9 @@ static class Cli
             {
                 var sender = new Sender(config);
                 string last = "";
-                sender.Status += (text, _) =>
+                sender.Status += (title, detail, _) =>
                 {
+                    var text = $"{title}: {detail}";
                     if (text == last) return;
                     last = text;
                     if (!Console.IsOutputRedirected) Console.Write("\r" + text.PadRight(70));
@@ -78,7 +79,8 @@ static class Cli
                     try
                     {
                         var result = await sender.SendFileAsync(link, Path.GetFullPath(file), ct);
-                        Console.WriteLine((Console.IsOutputRedirected ? "" : "\r") + result.PadRight(70));
+                        Console.WriteLine((Console.IsOutputRedirected ? "" : "\r") + result.ToString().PadRight(70));
+                        if (!result.Ok) failed++;
                     }
                     catch (Exception e) when (e is PhoneException or IOException or HttpRequestException)
                     {

@@ -32,8 +32,21 @@ final class HttpServer {
         long contentLength = -1;
         InputStream body;
         String remote;
+        OutputStream out;
+        private boolean continued;
 
         String header(String name) { return headers.get(name.toLowerCase(Locale.ROOT)); }
+
+        /**
+         * Klient s "Expect: 100-continue" čeká s tělem, až ho server přijme – voláme po kontrole
+         * oprávnění a místa. Když handler vrátí chybu dřív, tělo se vůbec neposílá.
+         */
+        void proceed() throws IOException {
+            if (continued || !"100-continue".equalsIgnoreCase(header("expect"))) return;
+            continued = true;
+            out.write("HTTP/1.1 100 Continue\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
+            out.flush();
+        }
     }
 
     static final class Response {
@@ -99,6 +112,7 @@ final class HttpServer {
                 return;
             }
             req.remote = sock.getInetAddress().getHostAddress();
+            req.out = out;
             Response res;
             try {
                 res = handler.handle(req);
@@ -190,6 +204,7 @@ final class HttpServer {
             case 403: return "Forbidden";
             case 404: return "Not Found";
             case 411: return "Length Required";
+            case 507: return "Insufficient Storage";
             default: return "Error";
         }
     }

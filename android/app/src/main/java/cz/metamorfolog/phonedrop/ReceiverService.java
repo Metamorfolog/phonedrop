@@ -186,6 +186,9 @@ public class ReceiverService extends Service {
         if (client == null) return unauthorized();
         if (req.contentLength < 0) return new HttpServer.Response(411, HttpServer.error("chybí Content-Length"));
         String name = Inbox.safeName(req.query.get("name"));
+        String noSpace = inbox.checkSpace(name, req.contentLength);
+        if (noSpace != null) return new HttpServer.Response(507, HttpServer.error(noSpace));
+        req.proceed();
         Log.i(TAG, "upload " + name + " " + req.contentLength + " B od " + client + " (" + req.remote + ")");
 
         PowerManager.WakeLock wake = getSystemService(PowerManager.class)

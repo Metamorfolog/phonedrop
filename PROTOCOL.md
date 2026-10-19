@@ -13,6 +13,8 @@ V síti se ohlašuje přes mDNS/DNS-SD jako `_phonedrop._tcp` s TXT `id=<UUID te
 
 - **Párování:** telefon ukazuje 6místný PIN (v appce i v trvalém oznámení). Po úspěšném párování a po 5 chybných pokusech se PIN změní.
   Telefon si ukládá jen SHA-256 tokenu, počítač token v `%APPDATA%\PhoneDrop\config.json`.
+- **Volné místo:** klient posílá `Expect: 100-continue`; telefon nejdřív ověří token a místo (APK počítá dvojnásobek)
+  a buď odpoví `100 Continue`, nebo rovnou `507 {"error":"V telefonu není místo: …"}` – tělo se pak vůbec neposílá.
 - **Tělo uploadu** se čte proudem přímo do MediaStore (`Download/Drop`, kolize → „jméno (1).ext“) nebo do PackageInstaller session.
   Neúplný přenos se zahodí (soubor smazán / session zrušena).
 - **Bez šifrování:** provoz v LAN je čisté HTTP (token jde v hlavičce). Pro domácí Wi-Fi v pořádku, do cizích sítí ne.

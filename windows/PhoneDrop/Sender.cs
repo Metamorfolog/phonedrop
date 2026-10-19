@@ -1,12 +1,18 @@
 namespace PhoneDrop;
 
+/// <summary>Výsledek jednoho souboru pro uživatele.</summary>
+public sealed record Outcome(bool Ok, string Title, string Detail)
+{
+    public override string ToString() => $"{(Ok ? "✓" : "✗")} {Title}: {Detail}";
+}
+
 /// <summary>Odeslání souborů na spárovaný telefon – sdílené oknem i příkazovou řádkou.</summary>
 public sealed class Sender(Config config)
 {
-    /// <summary>Text stavu a průběh 0–1 (null = neurčitý).</summary>
-    public event Action<string, double?>? Status;
+    /// <summary>Probíhající krok: nadpis (obvykle název souboru), detail a průběh 0–1 (null = neurčitý).</summary>
+    public event Action<string, string, double?>? Status;
 
-    void Report(string text, double? progress = null) => Status?.Invoke(text, progress);
+    void Report(string title, string detail, double? progress = null) => Status?.Invoke(title, detail, progress);
 
     /// <summary>Spojení s telefonem; když na uložené adrese neodpovídá, dohledá ho přes mDNS podle ID.</summary>
     public async Task<IPhoneLink> ConnectAsync(CancellationToken ct)
@@ -20,7 +26,7 @@ public sealed class Sender(Config config)
         }
         catch (Exception e) when (IsUnreachable(e, ct)) { }
 
-        Report($"Hledám {config.DeviceName} v síti…");
+        Report(config.DeviceName ?? "Telefon", "Hledám v síti…");
         var phones = await Mdns.DiscoverAsync(ct: ct);
         var match = phones.FirstOrDefault(p => p.Id == config.DeviceId);
         if (match != null && match.Address != config.Address)
@@ -37,8 +43,8 @@ public sealed class Sender(Config config)
     public static bool IsUnreachable(Exception e, CancellationToken ct) =>
         e is HttpRequestException || (e is OperationCanceledException && !ct.IsCancellationRequested);
 
-    /// <summary>Pošle soubor; u APK počká, až ho uživatel v telefonu potvrdí. Vrací výsledek pro uživatele.</summary>
-    public async Task<string> SendFileAsync(IPhoneLink link, string file, CancellationToken ct)
+    /// <summary>Pošle soubor; u APK počká, až ho uživatel v telefonu potvrdí.</summary>
+    public async Task<Outcome> SendFileAsync(IPhoneLink link, string file, CancellationToken ct)
     {
         var name = Path.GetFileName(file);
         long total = Math.Max(1, new FileInfo(file).Length);
@@ -46,17 +52,17 @@ public sealed class Sender(Config config)
         var progress = new Progress<long>(done =>
         {
             var secs = (DateTime.UtcNow - started).TotalSeconds;
-            var speed = secs > 0.5 ? $" · {done / secs / 1048576:0.0} MB/s" : "";
-            Report($"{name}: {Size(done)} z {Size(total)}{speed}", (double)done / total);
+            var speed = secs > 0.5 ? $"  ·  {done / secs / 1048576:0.0} MB/s" : "";
+            Report(name, $"{Size(done)} z {Size(total)}{speed}", (double)done / total);
         });
-        Report($"{name}: připojuji…", 0);
+        Report(name, "Připojuji…", 0);
         var result = await link.SendAsync(file, progress, ct);
 
-        if (result.Kind != "apk") return $"{name} → {result.Path}";
+        if (result.Kind != "apk") return new Outcome(true, name, "Uloženo do " + result.Path);
 
-        Report(result.CanInstall
-            ? $"{name}: potvrď instalaci v telefonu…"
-            : $"{name}: v telefonu povol PhoneDropu instalaci aplikací a potvrď…");
+        Report(name, result.CanInstall
+            ? "Potvrď instalaci v telefonu…"
+            : "V telefonu povol PhoneDropu instalaci aplikací a potvrď…");
         var deadline = DateTime.UtcNow.AddMinutes(5);
         while (DateTime.UtcNow < deadline)
         {
@@ -66,13 +72,13 @@ public sealed class Sender(Config config)
             catch (Exception e) when (IsUnreachable(e, ct)) { continue; } // telefon může instalací chvíli „zamrznout“
             switch (state)
             {
-                case "installed": return $"{name} nainstalováno ✓";
-                case "aborted": return $"{name}: instalace zrušena v telefonu";
-                case "unknown": return $"{name}: odesláno, výsledek instalace neznámý";
+                case "installed": return new Outcome(true, name, "Nainstalováno");
+                case "aborted": return new Outcome(false, name, "Instalace zrušena v telefonu");
+                case "unknown": return new Outcome(true, name, "Odesláno, výsledek instalace neznámý");
             }
-            if (state.StartsWith("failed")) return $"{name}: instalace selhala ({state[6..].TrimStart(':', ' ')})";
+            if (state.StartsWith("failed")) return new Outcome(false, name, "Instalace selhala: " + state[6..].TrimStart(':', ' '));
         }
-        return $"{name}: odesláno, instalace stále čeká na potvrzení v telefonu";
+        return new Outcome(true, name, "Odesláno, instalace čeká na potvrzení v telefonu");
     }
 
     public static string Size(long bytes) => bytes switch
