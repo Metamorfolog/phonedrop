@@ -1,4 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Výchozí (anglické) texty; čeština je ve values-cs/. -->
 <resources>
-    <string name="app_name">PhoneDrop</string>
+    <string name="app_name" translatable="false">PhoneDrop</string>
+
+    <string name="tagline">Files from your PC in one drag</string>
+    <string name="status_receiving">Receiving</string>
+    <string name="status_starting">Starting…</string>
+    <string name="status_off">Off</string>
+
+    <string name="hero_pin">Pairing PIN</string>
+    <string name="hero_hint">On Windows: PhoneDrop → ⋯ → Pair phone</string>
+    <string name="hero_off_title">Receiving is off</string>
+    <string name="hero_off_text">Your PC can\'t find this phone right now.</string>
+    <string name="hero_turn_on">Turn on</string>
+
+    <string name="section_receive">Receiving</string>
+    <string name="recv_title">Receive files</string>
+    <string name="recv_on">Your PC can find this phone on the network</string>
+    <string name="recv_off">Off – your PC can\'t find this phone</string>
+    <string name="storage_title">Storage</string>
+    <string name="storage_sub">Downloads › Drop  ·  APKs open the installer</string>
+
+    <string name="section_setup">Setup</string>
+    <string name="setup_done">all set</string>
+    <string name="setup_progress">%1$d of %2$d</string>
+    <string name="allow">Allow</string>
+    <string name="install_title">Install apps</string>
+    <string name="install_ok">Allowed – APKs install with one tap</string>
+    <string name="install_missing">Otherwise Android asks for every APK</string>
+    <string name="battery_title">Run in background</string>
+    <string name="battery_ok">Receives even with the screen off</string>
+    <string name="battery_missing">Otherwise the phone stops receiving when idle</string>
+    <string name="notify_title">Notifications</string>
+    <string name="notify_ok">Shows progress and install prompts</string>
+    <string name="notify_missing">Needed to confirm installs from the background</string>
+
+    <string name="section_pcs">Computers</string>
+    <string name="step1">Start PhoneDrop on your PC</string>
+    <string name="step2">Click ⋯ → Pair phone and pick this one</string>
+    <string name="step3">Type the PIN from the card above – then drag files</string>
+    <string name="paired">Paired</string>
+    <string name="unpair_all">Unpair all</string>
+    <string name="footer">PhoneDrop %1$s  ·  local network only</string>
+    <string name="no_network">no network</string>
+
+    <string name="ch_service">Background receiving</string>
+    <string name="ch_files">Received files</string>
+    <string name="ch_install">APK installs</string>
+    <string name="n_waiting">PhoneDrop is waiting for files</string>
+    <string name="n_receiving">Receiving %1$s</string>
+    <string name="n_saved">Saved: %1$s</string>
+    <string name="n_saved_where">Downloads › Drop</string>
+    <string name="n_install">Install %1$s</string>
+    <string name="n_install_text">Tap to confirm the install</string>
+    <string name="n_installed">Installed</string>
+    <string name="n_install_aborted">Install cancelled</string>
+    <string name="n_install_failed">Install failed</string>
 </resources>

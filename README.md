@@ -53,6 +53,18 @@ Výsledek: `windows/publish/PhoneDrop.exe` (~260 kB, potřebuje .NET 10 Desktop 
 - Google Play Protect může u nového/neznámého APK nabídnout sken – *Další podrobnosti → Instalovat bez skenování*.
 - Okénko ve Windows čeká na výsledek a ukáže *nainstalováno ✓ / zrušeno / selhalo (důvod)*.
 
+## Jazyky
+
+Čeština a angličtina, výchozí podle jazyka systému.
+
+- **Windows:** ⋯ → *Jazyk* (Automaticky / English / Čeština), okno se hned přestaví. Nebo `PhoneDrop.exe --lang auto|en|cs`.
+  Texty jsou v `windows/PhoneDrop/Strings.cs` – další jazyk = další parametr v `Pick` a řádek v `Languages`.
+- **Android:** podle jazyka telefonu, případně Nastavení → Aplikace → PhoneDrop → Jazyk (Android 13+).
+  Texty v `res/values/strings.xml` (angličtina) a `res/values-cs/strings.xml`; další jazyk = další složka `values-xx`
+  a řádek v `res/xml/locales_config.xml`.
+- Chyby z telefonu chodí do počítače jako kódy (`no_space`, `bad_pin`, …) a překládá je až Windows – hláška je
+  v jazyce počítače, i když má telefon jiný.
+
 ## Příkazová řádka
 
 ```

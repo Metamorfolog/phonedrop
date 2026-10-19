@@ -14,6 +14,7 @@
 
     <application
         android:allowBackup="false"
+        android:localeConfig="@xml/locales_config"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.PhoneDrop">
@@ -35,7 +36,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Příjem souborů a APK z vlastního počítače v místní síti" />
+                android:value="Receiving files and APKs from the user's own PC on the local network" />
         </service>
 
         <!-- Výsledek PackageInstaller session (potvrzení instalace, úspěch, chyba). -->

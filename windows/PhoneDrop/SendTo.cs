@@ -6,25 +6,30 @@ namespace PhoneDrop;
 /// <summary>Zástupce v %APPDATA%\Microsoft\Windows\SendTo → položka „Odeslat do › Telefon (PhoneDrop)“.</summary>
 public static class SendTo
 {
-    static string LinkPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.SendTo), "Telefon (PhoneDrop).lnk");
+    static string Dir => Environment.GetFolderPath(Environment.SpecialFolder.SendTo);
+    static string LinkPath => Path.Combine(Dir, L.SendToLinkName + ".lnk");
 
-    public static bool Installed => File.Exists(LinkPath);
+    /// <summary>Odkazy ze všech jazyků (po změně jazyka zůstane starý název).</summary>
+    static IEnumerable<string> AllLinks => new[] { "Phone (PhoneDrop)", "Telefon (PhoneDrop)" }.Select(n => Path.Combine(Dir, n + ".lnk"));
+
+    public static bool Installed => AllLinks.Any(File.Exists);
 
     public static void Install()
     {
+        Uninstall();
         var exe = Environment.ProcessPath!;
         var link = (IShellLinkW)new ShellLink();
         link.SetPath(exe);
         link.SetWorkingDirectory(Path.GetDirectoryName(exe)!);
         link.SetIconLocation(exe, 0);
-        link.SetDescription("Odeslat do telefonu přes PhoneDrop");
+        link.SetDescription(L.SendToDescription);
         ((IPersistFile)link).Save(LinkPath, true);
         Marshal.ReleaseComObject(link);
     }
 
     public static void Uninstall()
     {
-        if (File.Exists(LinkPath)) File.Delete(LinkPath);
+        foreach (var link in AllLinks) if (File.Exists(link)) File.Delete(link);
     }
 
     [ComImport, Guid("00021401-0000-0000-C000-000000000046")]

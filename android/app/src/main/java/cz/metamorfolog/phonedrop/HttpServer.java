@@ -108,7 +108,7 @@ final class HttpServer {
             try {
                 req = parse(in);
             } catch (IOException e) {
-                write(out, new Response(400, error("bad request")));
+                write(out, new Response(400, error("bad_request", "bad request")));
                 return;
             }
             req.remote = sock.getInetAddress().getHostAddress();
@@ -118,7 +118,7 @@ final class HttpServer {
                 res = handler.handle(req);
             } catch (Exception e) {
                 Log.w(TAG, "handler " + req.path, e);
-                res = new Response(500, error(String.valueOf(e.getMessage())));
+                res = new Response(500, error("failed", String.valueOf(e.getMessage())));
             }
             write(out, res);
         } catch (IOException e) {
@@ -126,10 +126,10 @@ final class HttpServer {
         }
     }
 
-    static JSONObject error(String msg) {
+    static JSONObject error(String code, String msg) {
         JSONObject o = new JSONObject();
         try {
-            o.put("ok", false).put("error", msg);
+            o.put("ok", false).put("code", code).put("error", msg);
         } catch (Exception ignored) {
         }
         return o;

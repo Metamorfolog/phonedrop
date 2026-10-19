@@ -36,7 +36,7 @@ public sealed class LanLink(string address, string token) : IPhoneLink
         using var cts = Short(ct);
         using var res = await Http.PostAsync(url, null, cts.Token);
         var json = await ReadJson(res, cts.Token);
-        if (res.StatusCode == HttpStatusCode.Forbidden) throw new PhoneException("Špatný PIN.");
+        if (res.StatusCode == HttpStatusCode.Forbidden) throw new PhoneException(L.WrongPin);
         Check(res, json);
         return (json.GetProperty("token").GetString()!, json.GetProperty("id").GetString()!, json.GetProperty("name").GetString()!);
     }
@@ -103,16 +103,22 @@ public sealed class LanLink(string address, string token) : IPhoneLink
     {
         var text = await res.Content.ReadAsStringAsync(ct);
         try { return JsonDocument.Parse(text).RootElement; }
-        catch (JsonException) { throw new PhoneException($"Neplatná odpověď ({(int)res.StatusCode})."); }
+        catch (JsonException) { throw new PhoneException(L.InvalidResponse((int)res.StatusCode)); }
     }
 
     static void Check(HttpResponseMessage res, JsonElement json)
     {
-        if (res.StatusCode == HttpStatusCode.Unauthorized) throw new PhoneException("Telefon tento počítač nezná – spáruj ho znovu.");
+        if (res.StatusCode == HttpStatusCode.Unauthorized) throw new PhoneException(L.UnknownComputer);
         if (!res.IsSuccessStatusCode || !json.TryGetProperty("ok", out var ok) || !ok.GetBoolean())
         {
+            // Telefon posílá strojový kód (překládá se tady, do jazyka počítače) a anglický text jako zálohu.
+            var code = json.TryGetProperty("code", out var c) ? c.GetString() : null;
+            if (code == "no_space")
+                throw new PhoneException(L.NoSpace(json.GetProperty("needMb").GetInt64(), json.GetProperty("freeMb").GetInt64()));
+            if (code == "bad_pin") throw new PhoneException(L.WrongPin);
+            if (code == "unpaired") throw new PhoneException(L.UnknownComputer);
             var msg = json.TryGetProperty("error", out var e) ? e.GetString() : null;
-            throw new PhoneException(msg ?? $"Chyba {(int)res.StatusCode}.");
+            throw new PhoneException(msg ?? L.PhoneError((int)res.StatusCode));
         }
     }
 

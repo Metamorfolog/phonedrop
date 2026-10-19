@@ -147,11 +147,11 @@ sealed class DropZone : PaintedControl
         using var big = Theme.Semibold(12.5f);
         using var small = Theme.UiFont(8.75f);
         int ty = (int)(cy + rad + 12);
-        TextRenderer.DrawText(g, hot ? "Pusť a letí do telefonu" : "Přetáhni sem soubor nebo APK", big,
+        TextRenderer.DrawText(g, hot ? L.DropHot : L.DropTitle, big,
             new Rectangle(0, ty, Width, 26), hot ? Theme.Accent : Theme.Fore, TextFormatFlags.HorizontalCenter);
-        TextRenderer.DrawText(g, "nebo klikni a vyber", small,
+        TextRenderer.DrawText(g, L.DropClick, small,
             new Rectangle(10, ty + 28, Width - 20, 18), Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
-        TextRenderer.DrawText(g, "APK se rovnou nabídne k instalaci", small,
+        TextRenderer.DrawText(g, L.DropApk, small,
             new Rectangle(10, ty + 46, Width - 20, 18), Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
     }
 }

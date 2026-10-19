@@ -48,13 +48,21 @@ public sealed class MainForm : Form
         cardHost.Controls.Add(card);
 
         var menu = new ContextMenuStrip { Renderer = new DarkMenuRenderer(), ShowImageMargin = false, ShowCheckMargin = true, Font = Theme.UiFont(9.5f) };
-        menu.Items.Add("Spárovat telefon…", null, (_, _) => Pair());
-        sendToItem = new ToolStripMenuItem("V Průzkumníku: Odeslat do › Telefon", null, (_, _) => ToggleSendTo());
-        topItem = new ToolStripMenuItem("Vždy navrchu", null, (_, _) => ToggleTopMost());
+        menu.Items.Add(L.MenuPair, null, (_, _) => Pair());
+        sendToItem = new ToolStripMenuItem(L.MenuSendTo, null, (_, _) => ToggleSendTo());
+        topItem = new ToolStripMenuItem(L.MenuTopMost, null, (_, _) => ToggleTopMost());
         menu.Items.Add(sendToItem);
         menu.Items.Add(topItem);
+        var langItem = new ToolStripMenuItem(L.MenuLanguage);
+        foreach (var (code, name) in new[] { ("auto", L.MenuAuto) }.Concat(L.Languages))
+        {
+            var item = new ToolStripMenuItem(name, null, (_, _) => SetLanguage(code)) { Checked = config.Language == code };
+            langItem.DropDownItems.Add(item);
+        }
+        langItem.DropDown.BackColor = Theme.Surface;
+        menu.Items.Add(langItem);
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Ukončit", null, (_, _) => Quit());
+        menu.Items.Add(L.MenuQuit, null, (_, _) => Quit());
         foreach (ToolStripItem item in menu.Items) item.Padding = new Padding(4, 5, 12, 5);
         menu.Opening += (_, _) =>
         {
@@ -89,8 +97,8 @@ public sealed class MainForm : Form
         }
 
         RefreshPhone();
-        if (config.IsPaired) card.Set(CardKind.Info, "Připraveno", "Soubory jdou do Stažené/Drop, APK k instalaci");
-        else card.Set(CardKind.Info, "Telefon není spárovaný", "⋯ → Spárovat telefon");
+        if (config.IsPaired) card.Set(CardKind.Info, L.Ready, L.ReadyDetail);
+        else card.Set(CardKind.Info, L.NotPairedTitle, L.NotPairedHint);
         Shown += (_, _) =>
         {
             if (!config.IsPaired) Pair();
@@ -113,13 +121,13 @@ public sealed class MainForm : Form
 
     void RefreshPhone()
     {
-        if (config.IsPaired) header.Set(config.DeviceName ?? "Telefon", config.Address!, true);
-        else header.Set("Žádný telefon", "Nespárováno", false);
+        if (config.IsPaired) header.Set(config.DeviceName ?? L.Phone, config.Address!, true);
+        else header.Set(L.NoPhone, L.Unpaired, false);
     }
 
     void PickFiles()
     {
-        using var dlg = new OpenFileDialog { Multiselect = true, Title = "Poslat do telefonu" };
+        using var dlg = new OpenFileDialog { Multiselect = true, Title = L.PickTitle };
         if (dlg.ShowDialog(this) == DialogResult.OK) Enqueue(dlg.FileNames);
     }
 
@@ -130,7 +138,7 @@ public sealed class MainForm : Form
         foreach (var p in paths)
         {
             if (File.Exists(p)) files.Add(p);
-            else if (Directory.Exists(p)) card.Set(CardKind.Error, Path.GetFileName(p), "Složky zatím neposílám – přetáhni soubory");
+            else if (Directory.Exists(p)) card.Set(CardKind.Error, Path.GetFileName(p), L.NoFolders);
         }
         foreach (var f in files) queue.Enqueue(f);
         if (files.Count > 0 && !busy) _ = ProcessQueueAsync();
@@ -143,7 +151,7 @@ public sealed class MainForm : Form
         try
         {
             if (!config.IsPaired) { Pair(); if (!config.IsPaired) { queue.Clear(); return; } }
-            card.Set(CardKind.Busy, config.DeviceName ?? "Telefon", "Připojuji…", null, queue.Count);
+            card.Set(CardKind.Busy, config.DeviceName ?? L.Phone, L.Connecting, null, queue.Count);
             var link = await sender.ConnectAsync(CancellationToken.None);
             RefreshPhone();
             while (queue.Count > 0)
@@ -165,9 +173,9 @@ public sealed class MainForm : Form
         catch (Exception e) when (e is PhoneException or HttpRequestException or OperationCanceledException)
         {
             queue.Clear();
-            results.Add(new Outcome(false, config.DeviceName ?? "Telefon", e is PhoneException ? e.Message : "Neodpovídá: " + e.Message));
+            results.Add(new Outcome(false, config.DeviceName ?? L.Phone, e is PhoneException ? e.Message : L.NotResponding(e.Message)));
             card.Set(CardKind.Error, results[^1].Title, results[^1].Detail);
-            header.Set(config.DeviceName ?? "Telefon", "Nedostupný · " + config.Address, false);
+            header.Set(config.DeviceName ?? L.Phone, L.Unreachable(config.Address!), false);
         }
         finally
         {
@@ -176,8 +184,8 @@ public sealed class MainForm : Form
         if (results.Count > 1)
         {
             int ok = results.Count(r => r.Ok);
-            card.Set(ok == results.Count ? CardKind.Ok : CardKind.Error, $"Odesláno {ok} z {results.Count}",
-                string.Join("  ·  ", results.Where(r => !r.Ok).Select(r => r.Title).DefaultIfEmpty("vše v pořádku")));
+            card.Set(ok == results.Count ? CardKind.Ok : CardKind.Error, L.SentSummary(ok, results.Count),
+                string.Join("  ·  ", results.Where(r => !r.Ok).Select(r => r.Title).DefaultIfEmpty(L.AllGood)));
         }
         if (!Visible && results.Count > 0)
             tray.ShowBalloonTip(4000, "PhoneDrop", string.Join("\n", results.TakeLast(3)), ToolTipIcon.None);
@@ -194,7 +202,7 @@ public sealed class MainForm : Form
         config.DeviceName = dlg.DeviceName;
         config.Save();
         RefreshPhone();
-        card.Set(CardKind.Ok, $"Spárováno s {config.DeviceName}", "Přetáhni sem soubor");
+        card.Set(CardKind.Ok, L.PairedWith(config.DeviceName!), L.DropHere);
     }
 
     void ToggleSendTo()
@@ -202,13 +210,25 @@ public sealed class MainForm : Form
         try
         {
             if (SendTo.Installed) SendTo.Uninstall(); else SendTo.Install();
-            card.Set(CardKind.Ok, SendTo.Installed ? "Přidáno do Odeslat do" : "Odebráno z Odeslat do",
-                SendTo.Installed ? "Pravé tlačítko na soubor → Odeslat do › Telefon" : "Položka v Průzkumníku zmizela");
+            card.Set(CardKind.Ok, SendTo.Installed ? L.SendToAdded : L.SendToRemoved,
+                SendTo.Installed ? L.SendToAddedHint : L.SendToRemovedHint);
         }
         catch (Exception e)
         {
-            card.Set(CardKind.Error, "Nepodařilo se", e.Message);
+            card.Set(CardKind.Error, L.Failed, e.Message);
         }
+    }
+
+    /// <summary>Nový jazyk: uložit a okno postavit znovu (Program ho po zavření vytvoří s novými texty).</summary>
+    void SetLanguage(string code)
+    {
+        config.Language = code;
+        config.Save();
+        L.Init(code);
+        // Odkaz v „Odeslat do“ nese název v jazyce appky.
+        if (SendTo.Installed) try { SendTo.Install(); } catch (Exception) { }
+        Program.Restart = true;
+        Quit();
     }
 
     void ToggleTopMost()
@@ -242,7 +262,7 @@ public sealed class MainForm : Form
             if (!hintShown)
             {
                 hintShown = true;
-                tray.ShowBalloonTip(3000, "PhoneDrop běží dál", "Okno otevřeš kliknutím na ikonu. Ukončení přes pravé tlačítko.", ToolTipIcon.None);
+                tray.ShowBalloonTip(3000, L.StillRunning, L.StillRunningText, ToolTipIcon.None);
             }
             return;
         }

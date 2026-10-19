@@ -11,6 +11,8 @@ public sealed class Config
     public string? Address { get; set; }
     public string? Token { get; set; }
     public bool TopMost { get; set; }
+    /// <summary>"auto" (podle Windows) nebo kód jazyka – viz <see cref="L.Languages"/>.</summary>
+    public string Language { get; set; } = "auto";
 
     public bool IsPaired => !string.IsNullOrEmpty(Token) && !string.IsNullOrEmpty(Address);
 

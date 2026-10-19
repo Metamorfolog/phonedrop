@@ -104,7 +104,7 @@ final class Prefs {
     }
 
     private static String clean(String client) {
-        if (client == null || client.trim().isEmpty()) return "počítač";
+        if (client == null || client.trim().isEmpty()) return "PC";
         String c = client.replace('|', ' ').trim();
         return c.length() > 64 ? c.substring(0, 64) : c;
     }

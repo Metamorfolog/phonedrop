@@ -18,7 +18,7 @@ public sealed class PairForm : Form
 
     public PairForm()
     {
-        Text = "Spárovat telefon";
+        Text = L.PairTitle;
         Icon = MainForm.AppIcon;
         Font = Theme.UiFont(9.5f);
         BackColor = Theme.Back;
@@ -29,15 +29,15 @@ public sealed class PairForm : Form
         AutoScaleMode = AutoScaleMode.Dpi;
         ClientSize = new Size(380, 446);
 
-        var title = new Label { Text = "Spárovat telefon", Font = Theme.Semibold(14f), Location = new Point(20, 16), AutoSize = true };
+        var title = new Label { Text = L.PairTitle, Font = Theme.Semibold(14f), Location = new Point(20, 16), AutoSize = true };
         var intro = new Label
         {
-            Text = "V telefonu otevři PhoneDrop, vyber ho tady ze seznamu a opiš PIN, který ukazuje.",
+            Text = L.PairIntro,
             ForeColor = Theme.Dim, Location = new Point(20, 48), AutoSize = true, MaximumSize = new Size(340, 0),
         };
 
-        var found = new Label { Text = "TELEFONY V SÍTI", Font = Theme.Semibold(8f), ForeColor = Theme.Dim, Location = new Point(20, 108), AutoSize = true };
-        search = new RoundButton { Text = "Hledat znovu", Location = new Point(258, 102), Size = new Size(102, 28), Font = Theme.Semibold(8.5f) };
+        var found = new Label { Text = L.PairFound, Font = Theme.Semibold(8f), ForeColor = Theme.Dim, Location = new Point(20, 108), AutoSize = true };
+        search = new RoundButton { Text = L.PairSearchAgain, Location = new Point(258, 102), Size = new Size(102, 28), Font = Theme.Semibold(8.5f) };
         search.Click += async (_, _) => await DiscoverAsync();
         list = new ListBox
         {
@@ -51,7 +51,7 @@ public sealed class PairForm : Form
             list.Invalidate();
         };
 
-        var la = new Label { Text = "ADRESA", Font = Theme.Semibold(8f), ForeColor = Theme.Dim, Location = new Point(20, 254), AutoSize = true };
+        var la = new Label { Text = L.PairAddress, Font = Theme.Semibold(8f), ForeColor = Theme.Dim, Location = new Point(20, 254), AutoSize = true };
         address = new InputBox { Location = new Point(20, 274), Width = 200 };
         address.Box.PlaceholderText = "192.168.1.20:8765";
         var lp = new Label { Text = "PIN", Font = Theme.Semibold(8f), ForeColor = Theme.Dim, Location = new Point(232, 254), AutoSize = true };
@@ -66,11 +66,11 @@ public sealed class PairForm : Form
         empty = new Label
         {
             Location = list.Location, Size = list.Size, TextAlign = ContentAlignment.MiddleCenter,
-            ForeColor = Theme.Dim, BackColor = Theme.Surface, Text = "Hledám…",
+            ForeColor = Theme.Dim, BackColor = Theme.Surface, Text = L.PairSearching,
         };
-        pair = new RoundButton { Text = "Spárovat", Primary = true, Location = new Point(250, 392), Size = new Size(110, 36) };
+        pair = new RoundButton { Text = L.PairButton, Primary = true, Location = new Point(250, 392), Size = new Size(110, 36) };
         pair.Click += async (_, _) => await PairAsync();
-        var cancel = new RoundButton { Text = "Zrušit", Location = new Point(132, 392), Size = new Size(110, 36), DialogResult = DialogResult.Cancel };
+        var cancel = new RoundButton { Text = L.Cancel, Location = new Point(132, 392), Size = new Size(110, 36), DialogResult = DialogResult.Cancel };
         AcceptButton = pair;
         CancelButton = cancel;
 
@@ -114,27 +114,27 @@ public sealed class PairForm : Form
     async Task DiscoverAsync()
     {
         search.Enabled = false;
-        if (list.Items.Count == 0) { list.Visible = false; empty.Text = "Hledám…"; }
+        if (list.Items.Count == 0) { list.Visible = false; empty.Text = L.PairSearching; }
         info.ForeColor = Theme.Dim;
-        info.Text = "Hledám telefony v síti…";
+        info.Text = L.PairSearchingNetwork;
         try
         {
             var found = await Mdns.DiscoverAsync();
             list.Items.Clear();
             foreach (var f in found) list.Items.Add(new FoundItem(f));
             list.Visible = found.Count > 0;
-            empty.Text = "Žádný telefon v síti\nBěží v něm PhoneDrop?";
+            empty.Text = L.PairNoneInList;
             if (found.Count > 0)
             {
                 list.SelectedIndex = 0;
-                info.Text = found.Count == 1 ? "Našel jsem jeden telefon – zadej PIN." : $"Nalezeno telefonů: {found.Count}";
+                info.Text = found.Count == 1 ? L.PairFoundOne : L.PairFoundMany(found.Count);
                 pin.Box.Focus();
             }
-            else info.Text = "Nic nenalezeno – zadej adresu, kterou ukazuje appka v telefonu.";
+            else info.Text = L.PairNothing;
         }
         catch (Exception e)
         {
-            info.Text = "Hledání selhalo: " + e.Message;
+            info.Text = L.PairSearchFailed(e.Message);
         }
         finally
         {
@@ -146,13 +146,13 @@ public sealed class PairForm : Form
     {
         var addr = address.Box.Text.Trim();
         info.ForeColor = Theme.Bad;
-        if (addr.Length == 0) { info.Text = "Zadej adresu telefonu."; return; }
+        if (addr.Length == 0) { info.Text = L.PairNeedAddress; return; }
         if (!addr.Contains(':')) addr += ":8765";
         var code = new string(pin.Box.Text.Where(char.IsDigit).ToArray());
-        if (code.Length != 6) { info.Text = "PIN má 6 číslic."; return; }
+        if (code.Length != 6) { info.Text = L.PairPinDigits; return; }
         pair.Enabled = false;
         info.ForeColor = Theme.Dim;
-        info.Text = "Páruji…";
+        info.Text = L.Pairing;
         try
         {
             var (token, id, name) = await LanLink.PairAsync(addr, code, CancellationToken.None);
@@ -163,7 +163,7 @@ public sealed class PairForm : Form
         catch (Exception e)
         {
             info.ForeColor = Theme.Bad;
-            info.Text = e is PhoneException ? e.Message : "Telefon neodpovídá: " + e.Message;
+            info.Text = e is PhoneException ? e.Message : L.PhoneNotResponding(e.Message);
         }
         finally
         {

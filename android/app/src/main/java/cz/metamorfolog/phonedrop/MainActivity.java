@@ -110,7 +110,7 @@ public class MainActivity extends Activity {
         hero(on);
 
         // Příjem.
-        section("Příjem", null);
+        section(getString(R.string.section_receive), null);
         LinearLayout recv = card();
         Switch sw = new Switch(this);
         sw.setChecked(on);
@@ -119,11 +119,11 @@ public class MainActivity extends Activity {
         sw.setTrackTintList(new ColorStateList(states, new int[]{color(R.color.accentTint), color(R.color.line)}));
         sw.setOnCheckedChangeListener((b, checked) -> setEnabled(checked));
         View recvRow = item(recv, R.drawable.ic_download, R.color.accent, R.color.accentTint,
-                "Přijímat soubory", on ? "Počítač telefon najde v síti" : "Vypnuto – počítač telefon nenajde", sw);
+                getString(R.string.recv_title), getString(on ? R.string.recv_on : R.string.recv_off), sw);
         recvRow.setOnClickListener(v -> sw.toggle());
         divider(recv);
         View store = item(recv, R.drawable.ic_folder, R.color.blue, R.color.blueTint,
-                "Ukládání", "Stažené › Drop  ·  APK rovnou k instalaci", chevron());
+                getString(R.string.storage_title), getString(R.string.storage_sub), chevron());
         store.setOnClickListener(v -> open(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)));
 
         // Kontrolní seznam: co telefon potřebuje, aby vše šlo na jedno ťuknutí.
@@ -131,37 +131,37 @@ public class MainActivity extends Activity {
         boolean battery = getSystemService(PowerManager.class).isIgnoringBatteryOptimizations(getPackageName());
         boolean notify = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
         int done = (install ? 1 : 0) + (battery ? 1 : 0) + (notify ? 1 : 0);
-        section("Nastavení", done == 3 ? "vše hotovo" : done + " ze 3");
+        section(getString(R.string.section_setup), done == 3 ? getString(R.string.setup_done) : getString(R.string.setup_progress, done, 3));
         LinearLayout setup = card();
-        item(setup, R.drawable.ic_shield, R.color.violet, R.color.violetTint, "Instalace aplikací",
-                install ? "Povoleno – APK jde nainstalovat jedním ťuknutím" : "Bez toho se systém ptá u každého APK",
-                install ? doneMark() : action("Povolit", () -> open(new Intent(
+        item(setup, R.drawable.ic_shield, R.color.violet, R.color.violetTint, getString(R.string.install_title),
+                getString(install ? R.string.install_ok : R.string.install_missing),
+                install ? doneMark() : action(getString(R.string.allow), () -> open(new Intent(
                         Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName())))));
         divider(setup);
-        item(setup, R.drawable.ic_battery, R.color.warn, R.color.warnTint, "Běh na pozadí",
-                battery ? "Příjem funguje i se zhasnutým displejem" : "Jinak telefon v klidu přestane přijímat",
-                battery ? doneMark() : action("Povolit", () -> open(new Intent(
+        item(setup, R.drawable.ic_battery, R.color.warn, R.color.warnTint, getString(R.string.battery_title),
+                getString(battery ? R.string.battery_ok : R.string.battery_missing),
+                battery ? doneMark() : action(getString(R.string.allow), () -> open(new Intent(
                         Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getPackageName())))));
         divider(setup);
-        item(setup, R.drawable.ic_bell, R.color.blue, R.color.blueTint, "Oznámení",
-                notify ? "Uvidíš průběh a potvrzení instalace" : "Potřeba pro potvrzení instalace z pozadí",
-                notify ? doneMark() : action("Povolit", () -> open(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        item(setup, R.drawable.ic_bell, R.color.blue, R.color.blueTint, getString(R.string.notify_title),
+                getString(notify ? R.string.notify_ok : R.string.notify_missing),
+                notify ? doneMark() : action(getString(R.string.allow), () -> open(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                         .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()))));
 
         // Počítače.
         List<String> clients = prefs.pairedClients();
-        section("Počítače", clients.isEmpty() ? null : String.valueOf(clients.size()));
+        section(getString(R.string.section_pcs), clients.isEmpty() ? null : String.valueOf(clients.size()));
         LinearLayout pcs = card();
         if (clients.isEmpty()) {
-            step(pcs, 1, "Na počítači spusť PhoneDrop");
-            step(pcs, 2, "Klikni na ⋯ → Spárovat telefon a vyber tenhle");
-            step(pcs, 3, "Opiš PIN z horní karty – a přetahuj soubory");
+            step(pcs, 1, getString(R.string.step1));
+            step(pcs, 2, getString(R.string.step2));
+            step(pcs, 3, getString(R.string.step3));
         } else {
             for (int i = 0; i < clients.size(); i++) {
                 if (i > 0) divider(pcs);
-                item(pcs, R.drawable.ic_monitor, R.color.accent, R.color.accentTint, clients.get(i), "Spárováno", null);
+                item(pcs, R.drawable.ic_monitor, R.color.accent, R.color.accentTint, clients.get(i), getString(R.string.paired), null);
             }
-            TextView unpair = label("Zrušit všechna párování", 14, R.color.bad, MEDIUM);
+            TextView unpair = label(getString(R.string.unpair_all), 14, R.color.bad, MEDIUM);
             unpair.setGravity(Gravity.CENTER);
             unpair.setPadding(px(16), px(14), px(16), px(16));
             unpair.setBackground(ripple(null));
@@ -175,7 +175,7 @@ public class MainActivity extends Activity {
             pcs.addView(unpair, new LinearLayout.LayoutParams(MATCH, WRAP));
         }
 
-        TextView foot = label("PhoneDrop " + versionName() + "  ·  jen v místní síti", 12, R.color.faint, null);
+        TextView foot = label(getString(R.string.footer, versionName()), 12, R.color.faint, null);
         foot.setGravity(Gravity.CENTER);
         foot.setPadding(0, px(22), 0, 0);
         root.addView(foot, new LinearLayout.LayoutParams(MATCH, WRAP));
@@ -216,7 +216,7 @@ public class MainActivity extends Activity {
         LinearLayout titles = column();
         titles.setPadding(px(14), 0, px(8), 0);
         titles.addView(label("PhoneDrop", 26, R.color.text, BLACK));
-        titles.addView(label("Soubory z počítače jedním tahem", 13, R.color.dim, null));
+        titles.addView(label(getString(R.string.tagline), 13, R.color.dim, null));
         h.addView(titles, new LinearLayout.LayoutParams(0, WRAP, 1));
 
         LinearLayout pill = row();
@@ -225,7 +225,7 @@ public class MainActivity extends Activity {
         View dot = new View(this);
         dot.setBackground(oval(running ? R.color.accent : R.color.faint));
         pill.addView(dot, new LinearLayout.LayoutParams(px(8), px(8)));
-        TextView t = label(running ? "Přijímá" : on ? "Startuje…" : "Vypnuto", 13, running ? R.color.accent : R.color.dim, MEDIUM);
+        TextView t = label(getString(running ? R.string.status_receiving : on ? R.string.status_starting : R.string.status_off), 13, running ? R.color.accent : R.color.dim, MEDIUM);
         t.setPadding(px(8), 0, 0, 0);
         pill.addView(t);
         h.addView(pill);
@@ -253,9 +253,9 @@ public class MainActivity extends Activity {
         root.addView(hero, lp);
 
         if (!on) {
-            hero.addView(white(label("Příjem je vypnutý", 22, 0, BOLD), 1f));
-            hero.addView(white(label("Počítač teď telefon nenajde.", 14, 0, null), 0.85f));
-            TextView b = label("Zapnout příjem", 15, R.color.heroEnd, MEDIUM);
+            hero.addView(white(label(getString(R.string.hero_off_title), 22, 0, BOLD), 1f));
+            hero.addView(white(label(getString(R.string.hero_off_text), 14, 0, null), 0.85f));
+            TextView b = label(getString(R.string.hero_turn_on), 15, R.color.heroEnd, MEDIUM);
             b.setPadding(px(20), px(10), px(20), px(10));
             b.setBackground(new RippleDrawable(ColorStateList.valueOf(0x22000000), roundedRaw(0xFFFFFFFF, 50), null));
             b.setOnClickListener(v -> setEnabled(true));
@@ -266,7 +266,7 @@ public class MainActivity extends Activity {
         }
 
         LinearLayout top = row();
-        TextView cap = white(label("PIN PRO SPÁROVÁNÍ", 12, 0, MEDIUM), 0.8f);
+        TextView cap = white(label(getString(R.string.hero_pin).toUpperCase(), 12, 0, MEDIUM), 0.8f);
         cap.setLetterSpacing(0.12f);
         top.addView(cap, new LinearLayout.LayoutParams(0, WRAP, 1));
         LinearLayout chip = row();
@@ -291,7 +291,7 @@ public class MainActivity extends Activity {
         pin.setShadowLayer(px(10), 0, px(2), 0x33000000);
         hero.addView(pin);
 
-        hero.addView(white(label("Ve Windows: PhoneDrop → ⋯ → Spárovat telefon", 14, 0, null), 0.88f));
+        hero.addView(white(label(getString(R.string.hero_hint), 14, 0, null), 0.88f));
     }
 
     private void section(String title, String trailing) {

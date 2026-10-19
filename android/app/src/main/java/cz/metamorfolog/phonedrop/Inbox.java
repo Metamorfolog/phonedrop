@@ -43,14 +43,19 @@ final class Inbox {
         return name.toLowerCase(Locale.ROOT).endsWith(".apk");
     }
 
-    /** Vrátí chybovou hlášku, když se soubor do telefonu nevejde (APK potřebuje místo i pro instalaci). */
-    String checkSpace(String name, long length) {
+    /** Vrátí chybu pro počítač, když se soubor do telefonu nevejde (APK potřebuje místo i pro instalaci). */
+    JSONObject checkSpace(String name, long length) {
         File dir = isApk(name) ? Environment.getDataDirectory() : Environment.getExternalStorageDirectory();
         long free = new StatFs(dir.getPath()).getAvailableBytes();
         long need = (isApk(name) ? 2 * length : length) + 16L * 1024 * 1024;
         if (free >= need) return null;
-        return String.format(Locale.ROOT, "V telefonu není místo: potřeba %d MB, volno %d MB",
-                need / 1048576, free / 1048576);
+        JSONObject e = HttpServer.error("no_space", String.format(Locale.ROOT,
+                "not enough space on the phone: need %d MB, free %d MB", need / 1048576, free / 1048576));
+        try {
+            e.put("needMb", need / 1048576).put("freeMb", free / 1048576);
+        } catch (JSONException ignored) {
+        }
+        return e;
     }
 
     JSONObject accept(String name, long length, InputStream in, Progress progress) throws IOException, JSONException {
@@ -66,11 +71,11 @@ final class Inbox {
         v.put(MediaStore.Downloads.RELATIVE_PATH, DIR);
         v.put(MediaStore.Downloads.IS_PENDING, 1);
         Uri uri = cr.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
-        if (uri == null) throw new IOException("MediaStore insert selhal");
+        if (uri == null) throw new IOException("MediaStore insert failed");
         boolean ok = false;
         try {
             try (OutputStream out = cr.openOutputStream(uri)) {
-                if (out == null) throw new IOException("nelze zapisovat");
+                if (out == null) throw new IOException("cannot write");
                 copy(in, out, length, progress);
             }
             v.clear();
@@ -125,7 +130,7 @@ final class Inbox {
             done += n;
             if (progress != null) progress.update(done, length);
         }
-        if (done != length) throw new IOException("přenos přerušen (" + done + " z " + length + " B)");
+        if (done != length) throw new IOException("transfer interrupted (" + done + " of " + length + " B)");
     }
 
     static String safeName(String name) {
@@ -133,7 +138,7 @@ final class Inbox {
         int slash = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
         name = name.substring(slash + 1).replaceAll("[\\x00-\\x1f:*?\"<>|]", "_").trim();
         while (name.startsWith(".")) name = name.substring(1);
-        if (name.isEmpty()) name = "soubor";
+        if (name.isEmpty()) name = "file";
         return name.length() > 200 ? name.substring(name.length() - 200) : name;
     }
 

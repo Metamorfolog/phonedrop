@@ -21,9 +21,9 @@ final class Notifier {
 
     static void channels(Context ctx) {
         NotificationManager nm = ctx.getSystemService(NotificationManager.class);
-        nm.createNotificationChannel(new NotificationChannel(CH_SERVICE, "Příjem na pozadí", NotificationManager.IMPORTANCE_MIN));
-        nm.createNotificationChannel(new NotificationChannel(CH_FILES, "Přijaté soubory", NotificationManager.IMPORTANCE_DEFAULT));
-        nm.createNotificationChannel(new NotificationChannel(CH_INSTALL, "Instalace APK", NotificationManager.IMPORTANCE_HIGH));
+        nm.createNotificationChannel(new NotificationChannel(CH_SERVICE, ctx.getString(R.string.ch_service), NotificationManager.IMPORTANCE_MIN));
+        nm.createNotificationChannel(new NotificationChannel(CH_FILES, ctx.getString(R.string.ch_files), NotificationManager.IMPORTANCE_DEFAULT));
+        nm.createNotificationChannel(new NotificationChannel(CH_INSTALL, ctx.getString(R.string.ch_install), NotificationManager.IMPORTANCE_HIGH));
     }
 
     private static PendingIntent openApp(Context ctx) {
@@ -35,7 +35,7 @@ final class Notifier {
         return new Notification.Builder(ctx, CH_SERVICE)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setColor(ctx.getColor(R.color.accent))
-                .setContentTitle("PhoneDrop čeká na soubory")
+                .setContentTitle(ctx.getString(R.string.n_waiting))
                 .setContentText(address + " · PIN " + pin)
                 .setContentIntent(openApp(ctx))
                 .setOngoing(true)
@@ -48,7 +48,7 @@ final class Notifier {
         Notification n = new Notification.Builder(ctx, CH_SERVICE)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setColor(ctx.getColor(R.color.accent))
-                .setContentTitle("Přijímám " + name)
+                .setContentTitle(ctx.getString(R.string.n_receiving, name))
                 .setContentText(pct + " %")
                 .setProgress(100, pct, total <= 0)
                 .setOngoing(true)
@@ -69,8 +69,8 @@ final class Notifier {
         Notification n = new Notification.Builder(ctx, CH_FILES)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setColor(ctx.getColor(R.color.accent))
-                .setContentTitle("Uloženo: " + name)
-                .setContentText(Inbox.DIR)
+                .setContentTitle(ctx.getString(R.string.n_saved, name))
+                .setContentText(ctx.getString(R.string.n_saved_where))
                 .setContentIntent(open)
                 .setAutoCancel(true)
                 .build();
@@ -83,8 +83,8 @@ final class Notifier {
         Notification n = new Notification.Builder(ctx, CH_INSTALL)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setColor(ctx.getColor(R.color.accent))
-                .setContentTitle("Instalovat " + name)
-                .setContentText("Ťukni a potvrď instalaci")
+                .setContentTitle(ctx.getString(R.string.n_install, name))
+                .setContentText(ctx.getString(R.string.n_install_text))
                 .setContentIntent(pi)
                 .setCategory(Notification.CATEGORY_RECOMMENDATION)
                 .setGroup("install-" + session)

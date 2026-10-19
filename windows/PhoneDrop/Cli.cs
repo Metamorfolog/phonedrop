@@ -3,17 +3,6 @@ namespace PhoneDrop;
 /// <summary>Příkazová řádka – pro skripty a testy (výstup do konzole, ze které byl spuštěn).</summary>
 static class Cli
 {
-    const string Help = """
-        PhoneDrop – odeslání souborů do telefonu
-
-          PhoneDrop.exe [soubory…]              otevře okno (a soubory rovnou pošle)
-          PhoneDrop.exe --discover [služba]     vypíše telefony v síti (mDNS)
-          PhoneDrop.exe --pair <ip:port> <PIN>  spáruje telefon (PIN je v appce v telefonu)
-          PhoneDrop.exe --send <soubory…>       pošle soubory, APK nabídne k instalaci
-          PhoneDrop.exe --status                ověří spojení se spárovaným telefonem
-          PhoneDrop.exe --sendto on|off         přidá/odebere „Odeslat do › Telefon (PhoneDrop)“
-        """;
-
     public static int Run(string[] args)
     {
         if (!Console.IsOutputRedirected) Program.AttachConsole(-1);
@@ -25,7 +14,7 @@ static class Cli
         }
         catch (Exception e)
         {
-            Console.Error.WriteLine("Chyba: " + e.Message);
+            Console.Error.WriteLine(L.CliError + e.Message);
             return 1;
         }
     }
@@ -41,7 +30,7 @@ static class Cli
                 var service = args.Length > 1 ? args[1] : Mdns.PhoneDropService;
                 var found = await Mdns.DiscoverAsync(service, 3000, ct);
                 foreach (var p in found) Console.WriteLine($"{p.Instance}\t{p.Address}\t{p.Id}");
-                if (found.Count == 0) Console.WriteLine("Nic nenalezeno.");
+                if (found.Count == 0) Console.WriteLine(L.CliNothing);
                 return found.Count > 0 ? 0 : 2;
             }
             case "--pair" when args.Length >= 3:
@@ -52,13 +41,13 @@ static class Cli
                 config.DeviceId = id;
                 config.DeviceName = name;
                 config.Save();
-                Console.WriteLine($"Spárováno s {name} ({args[1]}).");
+                Console.WriteLine(L.CliPaired(name, args[1]));
                 return 0;
             }
             case "--status":
             {
                 var link = await new Sender(config).ConnectAsync(ct);
-                Console.WriteLine($"OK: {config.DeviceName} na {link.Describe}");
+                Console.WriteLine(L.CliStatus(config.DeviceName!, link.Describe));
                 return 0;
             }
             case "--send" when args.Length >= 2:
@@ -92,10 +81,16 @@ static class Cli
             }
             case "--sendto" when args.Length >= 2:
                 if (args[1] == "off") SendTo.Uninstall(); else SendTo.Install();
-                Console.WriteLine(SendTo.Installed ? "Odeslat do › Telefon (PhoneDrop): přidáno" : "Odebráno.");
+                Console.WriteLine(SendTo.Installed ? L.CliSendToOn : L.CliSendToOff);
+                return 0;
+            case "--lang" when args.Length >= 2:
+                config.Language = args[1];
+                config.Save();
+                L.Init(args[1]);
+                Console.WriteLine(L.CliLanguage(L.Languages.First(l => l.Code == L.Current).Name));
                 return 0;
             default:
-                Console.WriteLine(Help);
+                Console.WriteLine(L.CliHelp);
                 return args[0] is "--help" or "-h" ? 0 : 1;
         }
     }

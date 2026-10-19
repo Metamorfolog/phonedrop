@@ -148,7 +148,7 @@ public class ReceiverService extends Service {
                 }
             }
         }
-        return "bez sítě";
+        return ctx.getString(R.string.no_network);
     }
 
     // ---- HTTP ----
@@ -162,7 +162,7 @@ public class ReceiverService extends Service {
             case "POST /pair": {
                 String token = prefs.pair(req.query.get("pin"), req.query.get("client"));
                 refresh();
-                if (token == null) return new HttpServer.Response(403, HttpServer.error("špatný PIN"));
+                if (token == null) return new HttpServer.Response(403, HttpServer.error("bad_pin", "wrong PIN"));
                 return ok(new JSONObject().put("ok", true).put("token", token)
                         .put("id", prefs.deviceId()).put("name", prefs.deviceName()));
             }
@@ -177,17 +177,17 @@ public class ReceiverService extends Service {
                 return ok(new JSONObject().put("ok", true).put("state", InstallResultReceiver.state(session)));
             }
             default:
-                return new HttpServer.Response(404, HttpServer.error("not found"));
+                return new HttpServer.Response(404, HttpServer.error("not_found", "not found"));
         }
     }
 
     private HttpServer.Response upload(HttpServer.Request req) throws Exception {
         String client = client(req);
         if (client == null) return unauthorized();
-        if (req.contentLength < 0) return new HttpServer.Response(411, HttpServer.error("chybí Content-Length"));
+        if (req.contentLength < 0) return new HttpServer.Response(411, HttpServer.error("no_length", "Content-Length required"));
         String name = Inbox.safeName(req.query.get("name"));
-        String noSpace = inbox.checkSpace(name, req.contentLength);
-        if (noSpace != null) return new HttpServer.Response(507, HttpServer.error(noSpace));
+        JSONObject noSpace = inbox.checkSpace(name, req.contentLength);
+        if (noSpace != null) return new HttpServer.Response(507, noSpace);
         req.proceed();
         Log.i(TAG, "upload " + name + " " + req.contentLength + " B od " + client + " (" + req.remote + ")");
 
@@ -226,6 +226,6 @@ public class ReceiverService extends Service {
     }
 
     private static HttpServer.Response unauthorized() {
-        return new HttpServer.Response(401, HttpServer.error("nespárováno"));
+        return new HttpServer.Response(401, HttpServer.error("unpaired", "not paired"));
     }
 }

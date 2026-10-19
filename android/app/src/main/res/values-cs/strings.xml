@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tagline">Soubory z počítače jedním tahem</string>
+    <string name="status_receiving">Přijímá</string>
+    <string name="status_starting">Startuje…</string>
+    <string name="status_off">Vypnuto</string>
+
+    <string name="hero_pin">PIN pro spárování</string>
+    <string name="hero_hint">Ve Windows: PhoneDrop → ⋯ → Spárovat telefon</string>
+    <string name="hero_off_title">Příjem je vypnutý</string>
+    <string name="hero_off_text">Počítač teď telefon nenajde.</string>
+    <string name="hero_turn_on">Zapnout příjem</string>
+
+    <string name="section_receive">Příjem</string>
+    <string name="recv_title">Přijímat soubory</string>
+    <string name="recv_on">Počítač telefon najde v síti</string>
+    <string name="recv_off">Vypnuto – počítač telefon nenajde</string>
+    <string name="storage_title">Ukládání</string>
+    <string name="storage_sub">Stažené › Drop  ·  APK rovnou k instalaci</string>
+
+    <string name="section_setup">Nastavení</string>
+    <string name="setup_done">vše hotovo</string>
+    <string name="setup_progress">%1$d ze %2$d</string>
+    <string name="allow">Povolit</string>
+    <string name="install_title">Instalace aplikací</string>
+    <string name="install_ok">Povoleno – APK jde nainstalovat jedním ťuknutím</string>
+    <string name="install_missing">Bez toho se systém ptá u každého APK</string>
+    <string name="battery_title">Běh na pozadí</string>
+    <string name="battery_ok">Příjem funguje i se zhasnutým displejem</string>
+    <string name="battery_missing">Jinak telefon v klidu přestane přijímat</string>
+    <string name="notify_title">Oznámení</string>
+    <string name="notify_ok">Uvidíš průběh a potvrzení instalace</string>
+    <string name="notify_missing">Potřeba pro potvrzení instalace z pozadí</string>
+
+    <string name="section_pcs">Počítače</string>
+    <string name="step1">Na počítači spusť PhoneDrop</string>
+    <string name="step2">Klikni na ⋯ → Spárovat telefon a vyber tenhle</string>
+    <string name="step3">Opiš PIN z horní karty – a přetahuj soubory</string>
+    <string name="paired">Spárováno</string>
+    <string name="unpair_all">Zrušit všechna párování</string>
+    <string name="footer">PhoneDrop %1$s  ·  jen v místní síti</string>
+    <string name="no_network">bez sítě</string>
+
+    <string name="ch_service">Příjem na pozadí</string>
+    <string name="ch_files">Přijaté soubory</string>
+    <string name="ch_install">Instalace APK</string>
+    <string name="n_waiting">PhoneDrop čeká na soubory</string>
+    <string name="n_receiving">Přijímám %1$s</string>
+    <string name="n_saved">Uloženo: %1$s</string>
+    <string name="n_saved_where">Stažené › Drop</string>
+    <string name="n_install">Instalovat %1$s</string>
+    <string name="n_install_text">Ťukni a potvrď instalaci</string>
+    <string name="n_installed">Nainstalováno</string>
+    <string name="n_install_aborted">Instalace zrušena</string>
+    <string name="n_install_failed">Instalace selhala</string>
+</resources>

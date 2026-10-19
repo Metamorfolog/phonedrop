@@ -7,9 +7,14 @@ static class Program
 {
     static readonly string InstanceName = "PhoneDrop-" + Environment.UserName;
 
+    /// <summary>Okno se má po zavření postavit znovu (změna jazyka).</summary>
+    internal static bool Restart;
+    static MainForm? current;
+
     [STAThread]
     static int Main(string[] args)
     {
+        L.Init(Config.Load().Language);
         if (args.Length > 0 && args[0].StartsWith("--")) return Cli.Run(args);
 
         var files = args.Where(a => File.Exists(a) || Directory.Exists(a)).ToArray();
@@ -29,13 +34,19 @@ static class Program
         }
 
         ApplicationConfiguration.Initialize();
-        var form = new MainForm(files);
-        if (first) _ = ListenAsync(form);
-        Application.Run(form);
+        bool listening = false;
+        do
+        {
+            Restart = false;
+            current = new MainForm(files);
+            files = [];
+            if (first && !listening) { listening = true; _ = ListenAsync(); }
+            Application.Run(current);
+        } while (Restart);
         return 0;
     }
 
-    static async Task ListenAsync(MainForm form)
+    static async Task ListenAsync()
     {
         while (true)
         {
@@ -48,7 +59,8 @@ static class Program
                 var text = await r.ReadToEndAsync();
                 var files = text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                     .Where(f => f != "\u0001show").ToArray();
-                form.BeginInvoke(() => form.Enqueue(files, bringToFront: true));
+                var form = current;
+                if (form != null && form.IsHandleCreated) form.BeginInvoke(() => form.Enqueue(files, bringToFront: true));
             }
             catch (Exception)
             {

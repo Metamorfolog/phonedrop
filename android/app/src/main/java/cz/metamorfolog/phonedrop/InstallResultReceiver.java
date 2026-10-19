@@ -61,15 +61,15 @@ public class InstallResultReceiver extends BroadcastReceiver {
             }
             case PackageInstaller.STATUS_SUCCESS:
                 setState(session, "installed");
-                Notifier.installDone(ctx, session, "Nainstalováno", name);
+                Notifier.installDone(ctx, session, ctx.getString(R.string.n_installed), name);
                 break;
             case PackageInstaller.STATUS_FAILURE_ABORTED:
                 setState(session, "aborted");
-                Notifier.installDone(ctx, session, "Instalace zrušena", name);
+                Notifier.installDone(ctx, session, ctx.getString(R.string.n_install_aborted), name);
                 break;
             default:
                 setState(session, "failed: " + (message != null ? message : status));
-                Notifier.installDone(ctx, session, "Instalace selhala", name + (message != null ? " – " + message : ""));
+                Notifier.installDone(ctx, session, ctx.getString(R.string.n_install_failed), name + (message != null ? " – " + message : ""));
         }
     }
 }

@@ -17,7 +17,7 @@ public sealed class Sender(Config config)
     /// <summary>Spojení s telefonem; když na uložené adrese neodpovídá, dohledá ho přes mDNS podle ID.</summary>
     public async Task<IPhoneLink> ConnectAsync(CancellationToken ct)
     {
-        if (!config.IsPaired) throw new PhoneException("Telefon není spárovaný.");
+        if (!config.IsPaired) throw new PhoneException(L.NotPaired);
         var link = new LanLink(config.Address!, config.Token!);
         try
         {
@@ -26,7 +26,7 @@ public sealed class Sender(Config config)
         }
         catch (Exception e) when (IsUnreachable(e, ct)) { }
 
-        Report(config.DeviceName ?? "Telefon", "Hledám v síti…");
+        Report(config.DeviceName ?? L.Phone, L.SearchingNetwork);
         var phones = await Mdns.DiscoverAsync(ct: ct);
         var match = phones.FirstOrDefault(p => p.Id == config.DeviceId);
         if (match != null && match.Address != config.Address)
@@ -37,7 +37,7 @@ public sealed class Sender(Config config)
             await link.PingAsync(ct);
             return link;
         }
-        throw new PhoneException($"Telefon nenalezen ({config.Address}). Běží v něm PhoneDrop a jste ve stejné síti?");
+        throw new PhoneException(L.PhoneNotFound(config.Address!));
     }
 
     public static bool IsUnreachable(Exception e, CancellationToken ct) =>
@@ -53,16 +53,16 @@ public sealed class Sender(Config config)
         {
             var secs = (DateTime.UtcNow - started).TotalSeconds;
             var speed = secs > 0.5 ? $"  ·  {done / secs / 1048576:0.0} MB/s" : "";
-            Report(name, $"{Size(done)} z {Size(total)}{speed}", (double)done / total);
+            Report(name, L.Progress(Size(done), Size(total), speed), (double)done / total);
         });
-        Report(name, "Připojuji…", 0);
+        Report(name, L.Connecting, 0);
         var result = await link.SendAsync(file, progress, ct);
 
-        if (result.Kind != "apk") return new Outcome(true, name, "Uloženo do " + result.Path);
+        if (result.Kind != "apk") return new Outcome(true, name, L.SavedTo(result.Path!));
 
         Report(name, result.CanInstall
-            ? "Potvrď instalaci v telefonu…"
-            : "V telefonu povol PhoneDropu instalaci aplikací a potvrď…");
+            ? L.ConfirmInstall
+            : L.AllowInstall);
         var deadline = DateTime.UtcNow.AddMinutes(5);
         while (DateTime.UtcNow < deadline)
         {
@@ -72,13 +72,13 @@ public sealed class Sender(Config config)
             catch (Exception e) when (IsUnreachable(e, ct)) { continue; } // telefon může instalací chvíli „zamrznout“
             switch (state)
             {
-                case "installed": return new Outcome(true, name, "Nainstalováno");
-                case "aborted": return new Outcome(false, name, "Instalace zrušena v telefonu");
-                case "unknown": return new Outcome(true, name, "Odesláno, výsledek instalace neznámý");
+                case "installed": return new Outcome(true, name, L.Installed);
+                case "aborted": return new Outcome(false, name, L.InstallAborted);
+                case "unknown": return new Outcome(true, name, L.InstallUnknown);
             }
-            if (state.StartsWith("failed")) return new Outcome(false, name, "Instalace selhala: " + state[6..].TrimStart(':', ' '));
+            if (state.StartsWith("failed")) return new Outcome(false, name, L.InstallFailed(state[6..].TrimStart(':', ' ')));
         }
-        return new Outcome(true, name, "Odesláno, instalace čeká na potvrzení v telefonu");
+        return new Outcome(true, name, L.InstallPending);
     }
 
     public static string Size(long bytes) => bytes switch
