@@ -15,6 +15,11 @@ public sealed class Config
     public string Language { get; set; } = "auto";
     /// <summary>Vzhled: "auto" (podle Windows), "light" nebo "dark".</summary>
     public string Appearance { get; set; } = "auto";
+    /// <summary>Kam se ukládají soubory z telefonu; prázdné = složka Stažené.</summary>
+    public string? ReceiveDir { get; set; }
+
+    /// <summary>Složka pro soubory z telefonu (vlastní, jinak Stažené).</summary>
+    public string ReceiveFolder => !string.IsNullOrEmpty(ReceiveDir) && Directory.Exists(ReceiveDir) ? ReceiveDir : Receiver.Downloads;
 
     public bool IsPaired => !string.IsNullOrEmpty(Token) && !string.IsNullOrEmpty(Address);
 

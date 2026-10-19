@@ -10,6 +10,9 @@ V síti se ohlašuje přes mDNS/DNS-SD jako `_phonedrop._tcp` s TXT `id=<UUID te
 | `GET /ping` | Bearer | `{"ok":true,"id":"…","name":"…"}` nebo 401 |
 | `PUT /upload?name=<název>[&dir=<podsložka>]` + `Content-Length` | Bearer | soubor: `{"ok":true,"kind":"file","path":"Download/Drop/x.pdf"}`<br>APK: `{"ok":true,"kind":"apk","session":42,"canInstall":true}` |
 | `GET /install?session=42` | Bearer | `{"ok":true,"state":"pending|confirm|installed|aborted|failed: …|unknown"}` |
+| `GET /outbox?wait=25` | Bearer | `{"ok":true,"items":[{"id":"…","name":"foto.jpg","size":123}]}` (čeká až `wait` s, max 30) |
+| `GET /outbox/file?id=…` | Bearer | tělo souboru (`application/octet-stream`, `Content-Length`) |
+| `POST /outbox/done?id=…` | Bearer | `{"ok":true}` – telefon soubor smaže z fronty |
 
 - **Párování:** jen když je appka v telefonu otevřená (a 2 min po jejím opuštění), jinak 403 `pairing_closed`.
   PIN je vidět jen v appce. Po úspěšném párování se PIN změní; po 5 chybných pokusech taky a párování se na minutu
@@ -27,6 +30,13 @@ V síti se ohlašuje přes mDNS/DNS-SD jako `_phonedrop._tcp` s TXT `id=<UUID te
 - **Tělo uploadu** se čte proudem přímo do MediaStore (`Download/Drop`, kolize → „jméno (1).ext“) nebo do PackageInstaller session.
   Neúplný přenos se zahodí (soubor smazán / session zrušena).
 - **Bez šifrování:** provoz v LAN je čisté HTTP (token jde v hlavičce). Pro domácí Wi-Fi v pořádku, do cizích sítí ne.
+
+- **Z telefonu do počítače:** telefon zůstává serverem. Sdílené soubory (Sdílet › PhoneDrop) zkopíruje do své
+  fronty (`files/outbox`, nevyzvednuté se po 3 dnech smažou). Počítač drží dlouhý dotaz `GET /outbox?wait=25`;
+  telefon odpoví hned, jak pro něj něco má (soubor může mířit na konkrétní počítač podle hashe jeho tokenu, nebo
+  na kterýkoli spárovaný). Počítač soubor stáhne do `.<id>.phonedrop-part`, přejmenuje na volné jméno ve Stažených
+  a potvrdí `done`. Díky tomu se na počítači nic neotevírá ve firewallu. Starší telefon odpoví na `/outbox` 404 –
+  počítač to pak zkusí za 10 minut.
 
 ## Příprava na relay (zatím neimplementováno)
 

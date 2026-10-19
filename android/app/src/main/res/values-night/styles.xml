@@ -8,4 +8,14 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:colorAccent">@color/accent</item>
     </style>
+
+    <!-- Sdílení: bez vlastního okna, jen případný výběr počítače. -->
+    <style name="Theme.PhoneDrop.Share" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:colorAccent">@color/accent</item>
+    </style>
 </resources>

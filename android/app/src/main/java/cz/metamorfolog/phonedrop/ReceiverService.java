@@ -28,6 +28,10 @@ import java.net.Inet4Address;
 public class ReceiverService extends Service {
     private static final String TAG = "PhoneDrop";
     static final String SERVICE_TYPE = "_phonedrop._tcp";
+    /** Ze sdílení: zařadit soubory (ClipData) pro počítač {@link #EXTRA_TARGET} (null = kterýkoli). */
+    static final String ACTION_SHARE = "cz.metamorfolog.phonedrop.SHARE";
+    static final String ACTION_OUTBOX_CLEAR = "cz.metamorfolog.phonedrop.OUTBOX_CLEAR";
+    static final String EXTRA_TARGET = "target";
 
     /** Pro MainActivity: překreslit stav (párování, přijatý soubor). */
     static volatile Runnable onChange;
@@ -96,7 +100,40 @@ public class ReceiverService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        String action = intent != null ? intent.getAction() : null;
+        if (ACTION_SHARE.equals(action)) {
+            // Spuštěno přes startForegroundService – i běžící služba musí znovu potvrdit popředí.
+            if (android.os.Build.VERSION.SDK_INT >= 34) {
+                startForeground(Notifier.ID_SERVICE, Notifier.service(this, address()),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            } else {
+                startForeground(Notifier.ID_SERVICE, Notifier.service(this, address()));
+            }
+            java.util.List<android.net.Uri> uris = new java.util.ArrayList<>();
+            android.content.ClipData clip = intent.getClipData();
+            if (clip != null) for (int i = 0; i < clip.getItemCount(); i++) {
+                android.net.Uri u = clip.getItemAt(i).getUri();
+                if (u != null) uris.add(u);
+            }
+            String target = intent.getStringExtra(EXTRA_TARGET);
+            // Kopírování může trvat (video); oprávnění ke čtení drží služba, dokud běží.
+            new Thread(() -> {
+                java.util.List<String> failed = new java.util.ArrayList<>();
+                Outbox.get(this).add(uris, target, failed);
+                if (!failed.isEmpty()) handler.post(() -> android.widget.Toast.makeText(this,
+                        getString(R.string.share_failed, String.join(", ", failed)), android.widget.Toast.LENGTH_LONG).show());
+                handler.post(this::stopIfIdle);
+            }, "phonedrop-share").start();
+        } else if (ACTION_OUTBOX_CLEAR.equals(action)) {
+            Outbox.get(this).clear();
+            stopIfIdle();
+        }
         return START_STICKY;
+    }
+
+    /** Spuštěno jen kvůli odeslání do počítače (příjem vypnutý) a fronta je prázdná → skončit. */
+    private void stopIfIdle() {
+        if (!prefs.enabled() && Outbox.get(this).pending() == 0) stopSelf();
     }
 
     @Override
@@ -200,6 +237,17 @@ public class ReceiverService extends Service {
                 return ok(new JSONObject().put("ok", true).put("id", prefs.deviceId()).put("name", prefs.deviceName()));
             case "PUT /upload":
                 return upload(req);
+            case "GET /outbox":
+                return outbox(req);
+            case "GET /outbox/file":
+                return outboxFile(req);
+            case "POST /outbox/done": {
+                String key = clientKey(req);
+                if (key == null) return unauthorized();
+                Outbox.get(this).done(key, req.query.getOrDefault("id", ""));
+                handler.post(this::stopIfIdle);
+                return ok(new JSONObject().put("ok", true));
+            }
             case "GET /install": {
                 if (client(req) == null) return unauthorized();
                 int session = Integer.parseInt(req.query.getOrDefault("session", "-1"));
@@ -242,6 +290,56 @@ public class ReceiverService extends Service {
             wifi.release();
             wake.release();
         }
+    }
+
+    /** Dlouhý dotaz počítače: vrátí soubory, které pro něj telefon má, nebo po {@code wait} s prázdný seznam. */
+    private HttpServer.Response outbox(HttpServer.Request req) throws Exception {
+        String key = clientKey(req);
+        if (key == null) return unauthorized();
+        String name = client(req);
+        Outbox box = Outbox.get(this);
+        boolean wasOnline = box.online().containsKey(key);
+        box.touch(key, name);
+        if (!wasOnline) Notifier.outboxChanged(this);
+        long wait;
+        try {
+            wait = Math.max(0, Math.min(30, Long.parseLong(req.query.getOrDefault("wait", "0"))));
+        } catch (NumberFormatException e) {
+            wait = 0;
+        }
+        java.util.List<Outbox.Item> items;
+        try {
+            items = box.waitFor(key, wait * 1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            items = new java.util.ArrayList<>();
+        }
+        org.json.JSONArray a = new org.json.JSONArray();
+        for (Outbox.Item i : items) a.put(new JSONObject().put("id", i.id).put("name", i.name).put("size", i.size));
+        return ok(new JSONObject().put("ok", true).put("items", a));
+    }
+
+    private HttpServer.Response outboxFile(HttpServer.Request req) {
+        String key = clientKey(req);
+        if (key == null) return unauthorized();
+        Outbox box = Outbox.get(this);
+        Outbox.Item item = box.find(key, req.query.getOrDefault("id", ""));
+        if (item == null) return new HttpServer.Response(404, HttpServer.error("not_found", "not found"));
+        String pc = client(req);
+        long[] last = {0};
+        return HttpServer.Response.file(box.file(item), (done, total) -> {
+            long now = SystemClock.elapsedRealtime();
+            if (now - last[0] > 500 || done == total) {
+                last[0] = now;
+                Notifier.outboxProgress(this, item.name, pc, done, total);
+            }
+        });
+    }
+
+    private String clientKey(HttpServer.Request req) {
+        String auth = req.header("authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) return null;
+        return prefs.keyFor(auth.substring(7).trim());
     }
 
     private String client(HttpServer.Request req) {

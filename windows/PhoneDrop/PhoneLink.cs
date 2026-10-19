@@ -9,6 +9,9 @@ public sealed record SendResult(string Kind, string? Path, int Session, bool Can
 
 public sealed class PhoneException(string message) : Exception(message);
 
+/// <summary>Soubor, který telefon posílá do počítače (Sdílet › PhoneDrop).</summary>
+public sealed record OutboxItem(string Id, string Name, long Size);
+
 /// <summary>
 /// Cesta k telefonu. Dnes jen <see cref="LanLink"/> (přímé HTTP v místní síti);
 /// relay přes server bude další implementace se stejným protokolem (viz PROTOCOL.md).
@@ -84,6 +87,54 @@ public sealed class LanLink(string address, string token) : IPhoneLink
         var json = await ReadJson(res, cts.Token);
         Check(res, json);
         return json.GetProperty("state").GetString()!;
+    }
+
+    /// <summary>Soubory, které telefon chce poslat do počítače (dlouhý dotaz: telefon odpoví hned, jak něco má).</summary>
+    public async Task<IReadOnlyList<OutboxItem>> OutboxAsync(int waitSeconds, CancellationToken ct)
+    {
+        using var cts = Short(ct, waitSeconds + 15);
+        using var req = Request(HttpMethod.Get, "/outbox?wait=" + waitSeconds);
+        using var res = await Http.SendAsync(req, cts.Token);
+        if (res.StatusCode == HttpStatusCode.NotFound) throw new NotSupportedException("outbox");
+        var json = await ReadJson(res, cts.Token);
+        Check(res, json);
+        return json.GetProperty("items").EnumerateArray()
+            .Select(i => new OutboxItem(i.GetProperty("id").GetString()!, i.GetProperty("name").GetString()!, i.GetProperty("size").GetInt64()))
+            .ToList();
+    }
+
+    /// <summary>Stáhne soubor z telefonu do <paramref name="target"/>.</summary>
+    public async Task DownloadAsync(OutboxItem item, string target, IProgress<long> progress, CancellationToken ct)
+    {
+        using var req = Request(HttpMethod.Get, "/outbox/file?id=" + Uri.EscapeDataString(item.Id));
+        using var res = await Http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+        if (!res.IsSuccessStatusCode) Check(res, await ReadJson(res, ct));
+        await using var src = await res.Content.ReadAsStreamAsync(ct);
+        await using var dst = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1 << 16, useAsync: true);
+        var buf = new byte[1 << 16];
+        long done = 0;
+        int n;
+        // Telefon může uprostřed ztichnout (Wi-Fi) – bez dat 30 s = chyba.
+        using var idle = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        while (true)
+        {
+            idle.CancelAfter(TimeSpan.FromSeconds(30));
+            n = await src.ReadAsync(buf, idle.Token);
+            if (n <= 0) break;
+            await dst.WriteAsync(buf.AsMemory(0, n), ct);
+            done += n;
+            progress.Report(done);
+        }
+        if (done != item.Size) throw new IOException(L.ReceiveIncomplete);
+    }
+
+    /// <summary>Potvrdí telefonu, že je soubor uložený (smaže ho z fronty).</summary>
+    public async Task DoneAsync(OutboxItem item, CancellationToken ct)
+    {
+        using var cts = Short(ct);
+        using var req = Request(HttpMethod.Post, "/outbox/done?id=" + Uri.EscapeDataString(item.Id));
+        using var res = await Http.SendAsync(req, cts.Token);
+        Check(res, await ReadJson(res, cts.Token));
     }
 
     HttpRequestMessage Request(HttpMethod method, string path)

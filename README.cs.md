@@ -8,6 +8,9 @@ Náhrada za „adb install“ přes wireless debugging: **přetáhni soubor do o
 - split APK (`.apks` ze SAI nebo bundletoolu, `.xapk`) → všechna APK z balíku jdou do jedné instalace.
 - ostatní soubory → `Stažené/Drop` (Download/Drop), s oznámením, které soubor otevře. Jde přetáhnout víc souborů
   najednou i celou složku – v telefonu bude jako `Stažené/Drop/<složka>/…` i s podsložkami.
+- **Z telefonu do PC:** v libovolné appce *Sdílet › PhoneDrop do PC* (nebo *Poslat do počítače* v PhoneDropu)
+  a soubor přistane v počítači ve `Stažených` (složka jde změnit v menu ⋯). Počítač si ho vyzvedne sám, takže
+  se ve firewallu Windows nic neotevírá; když počítač neběží, soubor v telefonu počká (až 3 dny).
 - Funguje v místní síti (Wi-Fi). Telefon se najde sám přes mDNS, i když se mu změní IP.
 - Obě aplikace se aktualizují samy z GitHub Releases (soubor se ověří podle `SHA256SUMS.txt`, Android navíc
   přijme jen APK podepsané stejným klíčem).

@@ -52,7 +52,18 @@ final class HttpServer {
     static final class Response {
         final int code;
         final JSONObject json;
+        /** Místo JSON se pošle soubor (stažení do počítače). */
+        java.io.File file;
+        /** Průběh odesílání souboru (odesláno, celkem). */
+        Inbox.Progress progress;
         Response(int code, JSONObject json) { this.code = code; this.json = json; }
+
+        static Response file(java.io.File f, Inbox.Progress progress) {
+            Response r = new Response(200, null);
+            r.file = f;
+            r.progress = progress;
+            return r;
+        }
     }
 
     interface Handler {
@@ -186,6 +197,26 @@ final class HttpServer {
     }
 
     private static void write(OutputStream out, Response res) throws IOException {
+        if (res.file != null) {
+            long total = res.file.length();
+            String head = "HTTP/1.1 200 OK\r\n"
+                    + "Content-Type: application/octet-stream\r\n"
+                    + "Content-Length: " + total + "\r\n"
+                    + "Connection: close\r\n\r\n";
+            out.write(head.getBytes(StandardCharsets.US_ASCII));
+            try (InputStream in = new java.io.FileInputStream(res.file)) {
+                byte[] buf = new byte[1 << 16];
+                long done = 0;
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    out.write(buf, 0, n);
+                    done += n;
+                    if (res.progress != null) res.progress.update(done, total);
+                }
+            }
+            out.flush();
+            return;
+        }
         byte[] body = res.json.toString().getBytes(StandardCharsets.UTF_8);
         String head = "HTTP/1.1 " + res.code + " " + reason(res.code) + "\r\n"
                 + "Content-Type: application/json; charset=utf-8\r\n"

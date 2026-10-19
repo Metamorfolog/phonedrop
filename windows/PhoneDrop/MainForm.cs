@@ -30,12 +30,18 @@ public sealed class MainForm : Form
     UpdateInfo? update;
     bool updating;
     bool hintShown;
+    // Soubory z telefonu (Sdílet › PhoneDrop).
+    readonly Receiver receiver;
+    readonly CancellationTokenSource stopping = new();
+    string? lastReceived;
+    bool balloonIsReceived;
 
     public MainForm(string[] initialFiles, bool justUpdated = false)
     {
         // Jako z návrháře: rozvržení se postaví pro 96 DPI a ResumeLayout ho přepočítá na DPI monitoru.
         SuspendLayout();
         sender = new Sender(config);
+        receiver = new Receiver(config);
         sender.Status += (title, detail, progress) =>
             BeginInvoke(() => card!.Set(CardKind.Busy, title, detail, progress, queue.Count));
 
@@ -78,6 +84,9 @@ public sealed class MainForm : Form
         });
         menu.Items.Add(updateItem);
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(L.MenuOpenReceived, null, (_, _) => OpenReceived());
+        menu.Items.Add(L.MenuReceiveFolder, null, (_, _) => PickReceiveFolder());
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(L.MenuPair, null, (_, _) => Pair());
         sendToItem = new ToolStripMenuItem(L.MenuSendTo, null, (_, _) => ToggleSendTo());
         topItem = new ToolStripMenuItem(L.MenuTopMost, null, (_, _) => ToggleTopMost());
@@ -117,7 +126,31 @@ public sealed class MainForm : Form
 
         tray = new NotifyIcon { Icon = AppIcon, Text = "PhoneDrop", Visible = true, ContextMenuStrip = menu };
         tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) ShowWindow(); };
-        tray.BalloonTipClicked += async (_, _) => { if (update != null) { ShowWindow(); await InstallUpdateAsync(); } };
+        tray.BalloonTipClicked += async (_, _) =>
+        {
+            if (balloonIsReceived) { OpenReceived(); return; }
+            if (update != null) { ShowWindow(); await InstallUpdateAsync(); }
+        };
+        receiver.Started += item =>
+        {
+            if (!busy) card.Set(CardKind.Busy, item.Name, L.ReceivingFrom(config.DeviceName ?? L.Phone), 0);
+        };
+        receiver.Progress += (item, done) =>
+        {
+            if (!busy) card.Set(CardKind.Busy, item.Name, L.ReceivingFrom(config.DeviceName ?? L.Phone) + "  ·  "
+                + Sender.Size(done) + " / " + Sender.Size(item.Size), item.Size > 0 ? (double)done / item.Size : null);
+        };
+        receiver.Finished += (item, path) =>
+        {
+            lastReceived = path;
+            if (!busy) card.Set(CardKind.Ok, L.ReceivedTitle, L.ReceivedIn(Path.GetFileName(path), Path.GetFileName(Path.GetDirectoryName(path)) ?? ""));
+            if (!Visible) ShowBalloon(true, 5000, L.ReceivedTitle, L.ReceivedBalloon(Path.GetFileName(path)), ToolTipIcon.None);
+        };
+        receiver.Failed += (item, message) =>
+        {
+            if (!busy) card.Set(CardKind.Error, L.ReceiveFailed(item.Name), message);
+        };
+        receiver.Reachable += on => { if (!busy && !checking && online != on) SetOnline(on); };
 
         // Drop funguje kamkoli do okna, ne jen do rámečku.
         foreach (Control c in new Control[] { this, header, zoneHost, zone, cardHost, card })
@@ -148,6 +181,7 @@ public sealed class MainForm : Form
             _ = CheckPhoneAsync(force: true);
             updateTimer.Start();
             _ = CheckUpdateAsync(manual: false);
+            _ = receiver.RunAsync(stopping.Token);
         };
         ResumeLayout(false);
         PerformLayout();
@@ -231,7 +265,7 @@ public sealed class MainForm : Form
                 string.Join("  ·  ", results.Where(r => !r.Ok).Select(r => r.Title).DefaultIfEmpty(L.AllGood)));
         }
         if (!Visible && results.Count > 0)
-            tray.ShowBalloonTip(4000, "PhoneDrop", string.Join("\n", results.TakeLast(3)), ToolTipIcon.None);
+            ShowBalloon(false, 4000, "PhoneDrop", string.Join("\n", results.TakeLast(3)), ToolTipIcon.None);
     }
 
     void Pair()
@@ -254,6 +288,38 @@ public sealed class MainForm : Form
         ShowWindow();
         using var dlg = new FeedbackForm();
         if (dlg.ShowDialog(this) == DialogResult.OK && !busy) card.Set(CardKind.Ok, L.FeedbackThanks, L.FeedbackThanksDetail);
+    }
+
+    void ShowBalloon(bool received, int timeout, string title, string text, ToolTipIcon icon)
+    {
+        balloonIsReceived = received;
+        tray.ShowBalloonTip(timeout, title, text, icon);
+    }
+
+    /// <summary>Průzkumník ve složce se soubory z telefonu (s označeným posledním).</summary>
+    void OpenReceived()
+    {
+        try
+        {
+            if (lastReceived != null && File.Exists(lastReceived))
+                System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{lastReceived}\"");
+            else
+                System.Diagnostics.Process.Start("explorer.exe", $"\"{config.ReceiveFolder}\"");
+        }
+        catch (Exception e)
+        {
+            card.Set(CardKind.Error, L.Failed, e.Message);
+        }
+    }
+
+    void PickReceiveFolder()
+    {
+        ShowWindow();
+        using var dlg = new FolderBrowserDialog { Description = L.ReceiveFolderPick, UseDescriptionForTitle = true, SelectedPath = config.ReceiveFolder };
+        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+        config.ReceiveDir = string.Equals(dlg.SelectedPath, Receiver.Downloads, StringComparison.OrdinalIgnoreCase) ? null : dlg.SelectedPath;
+        config.Save();
+        card.Set(CardKind.Ok, L.ReceiveFolderSet, config.ReceiveFolder);
     }
 
     void ToggleSendTo()
@@ -407,7 +473,7 @@ public sealed class MainForm : Form
         updateItem.Text = L.MenuUpdateTo(found.Tag);
         updateItem.Font = new Font(updateItem.Font, FontStyle.Bold);
         if (!busy && (manual || CardReplaceable())) card.Set(CardKind.Info, L.UpdateAvailable(found.Tag), L.UpdateAvailableHint);
-        if (isNew && !manual) tray.ShowBalloonTip(8000, L.UpdateAvailable(found.Tag), L.UpdateBalloon, ToolTipIcon.Info);
+        if (isNew && !manual) ShowBalloon(false, 8000, L.UpdateAvailable(found.Tag), L.UpdateBalloon, ToolTipIcon.Info);
     }
 
     /// <summary>Stáhne, ověří a nainstaluje novou verzi, pak se restartuje.</summary>
@@ -471,11 +537,12 @@ public sealed class MainForm : Form
             if (!hintShown)
             {
                 hintShown = true;
-                tray.ShowBalloonTip(3000, L.StillRunning, L.StillRunningText, ToolTipIcon.None);
+                ShowBalloon(false, 3000, L.StillRunning, L.StillRunningText, ToolTipIcon.None);
             }
             return;
         }
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnSystemPreferences;
+        stopping.Cancel();
         watch.Dispose();
         updateTimer.Dispose();
         tray.Dispose();

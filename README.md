@@ -9,6 +9,9 @@ installer right away: one tap on **Install** and you're done. No cable, no `adb`
 - **Split APKs** (`.apks` from SAI or bundletool, `.xapk`) → all the APKs inside go into one install.
 - **Anything else** → saved to `Downloads/Drop`, with a notification that opens it. Drop several files at once or
   a whole folder: it lands as `Downloads/Drop/<folder>/…` with its subfolders.
+- **Phone → PC:** *Share › PhoneDrop* in any app (or *Send to PC* in PhoneDrop) and the file lands in
+  `Downloads` on the PC. The PC picks it up by itself, so nothing has to be opened in the Windows firewall;
+  if the PC is off, the file waits on the phone (up to 3 days).
 - Works on your local network. The PC finds the phone by itself (mDNS), even when its IP address changes.
 - Light and dark theme, English and Czech, on both sides.
 - Both apps update themselves from GitHub Releases (the download is checked against `SHA256SUMS.txt`;
@@ -33,6 +36,8 @@ PROTOCOL.md  the HTTP protocol between the two (in Czech)
    Pick the phone from the list (or type its address) and enter the PIN.
 3. Drop files into the window. Closing it keeps PhoneDrop in the notification area; quit from the ⋯ menu.
 4. Optional: ⋯ → *Explorer: Send to › Phone* adds **Send to › Phone (PhoneDrop)** to the right-click menu.
+5. The other way: on the phone, *Share › PhoneDrop to PC*. Files go to `Downloads` (⋯ → *Folder for files from the
+   phone…* to change it, ⋯ → *Open files from the phone* to see them).
 
 ### How APK installs work
 

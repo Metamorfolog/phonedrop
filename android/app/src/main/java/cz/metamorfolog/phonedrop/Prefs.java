@@ -122,6 +122,22 @@ final class Prefs {
         return null;
     }
 
+    /** Stabilní klíč spárovaného počítače (hash jeho tokenu), nebo null, když token neplatí. */
+    synchronized String keyFor(String token) {
+        if (clientFor(token) == null) return null;
+        return sha256(token);
+    }
+
+    /** Spárované počítače: klíč → název. */
+    synchronized java.util.Map<String, String> paired() {
+        java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
+        for (String entry : sp.getStringSet("tokens", new HashSet<>())) {
+            int bar = entry.indexOf('|');
+            if (bar > 0) out.put(entry.substring(0, bar), entry.substring(bar + 1));
+        }
+        return out;
+    }
+
     synchronized List<String> pairedClients() {
         List<String> out = new ArrayList<>();
         for (String entry : sp.getStringSet("tokens", new HashSet<>())) {

@@ -151,6 +151,10 @@ public class MainActivity extends Activity {
         View store = item(recv, R.drawable.ic_folder, R.color.blue, R.color.blueTint,
                 getString(R.string.storage_title), getString(R.string.storage_sub), chevron());
         store.setOnClickListener(v -> open(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)));
+        divider(recv);
+        View sendRow = item(recv, R.drawable.ic_upload, R.color.violet, R.color.violetTint,
+                getString(R.string.send_title), getString(R.string.send_sub), chevron());
+        sendRow.setOnClickListener(v -> pickToSend());
 
         // Kontrolní seznam: co telefon potřebuje, aby vše šlo na jedno ťuknutí.
         boolean install = getPackageManager().canRequestPackageInstalls();
@@ -578,6 +582,42 @@ public class MainActivity extends Activity {
     private boolean notificationsAllowed() {
         return android.os.Build.VERSION.SDK_INT < 33
                 || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private static final int REQ_SEND = 41;
+
+    /** Výběr souborů z telefonu → stejná cesta jako Sdílet › PhoneDrop. */
+    private void pickToSend() {
+        Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setType("*/*")
+                .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        try {
+            startActivityForResult(pick, REQ_SEND);
+        } catch (android.content.ActivityNotFoundException ignored) {
+        }
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    protected void onActivityResult(int request, int result, Intent data) {
+        super.onActivityResult(request, result, data);
+        if (request != REQ_SEND || result != RESULT_OK || data == null) return;
+        java.util.ArrayList<android.net.Uri> uris = new java.util.ArrayList<>();
+        if (data.getClipData() != null) {
+            for (int i = 0; i < data.getClipData().getItemCount(); i++) uris.add(data.getClipData().getItemAt(i).getUri());
+        } else if (data.getData() != null) {
+            uris.add(data.getData());
+        }
+        if (uris.isEmpty()) return;
+        android.content.ClipData clip = android.content.ClipData.newRawUri("", uris.get(0));
+        for (int i = 1; i < uris.size(); i++) clip.addItem(new android.content.ClipData.Item(uris.get(i)));
+        Intent share = new Intent(this, ShareActivity.class)
+                .setAction(Intent.ACTION_SEND_MULTIPLE)
+                .putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        share.setClipData(clip);
+        startActivity(share);
     }
 
     private void open(Intent i) {

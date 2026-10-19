@@ -29,6 +29,22 @@
             </intent-filter>
         </activity>
 
+        <!-- Sdílet → PhoneDrop: soubory do počítače (uloží se tam do Stažených). -->
+        <activity
+            android:name=".ShareActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="@string/share_label"
+            android:icon="@drawable/ic_launcher"
+            android:theme="@style/Theme.PhoneDrop.Share">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+
         <!-- Přijímač: HTTP server v LAN + ohlášení přes mDNS (_phonedrop._tcp). -->
         <service
             android:name=".ReceiverService"

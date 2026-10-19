@@ -89,6 +89,32 @@
         <item quantity="many">Uloženo %d souboru</item>
         <item quantity="other">Uloženo %d souborů</item>
     </plurals>
+    <string name="share_label">PhoneDrop do PC</string>
+    <string name="send_title">Poslat do počítače</string>
+    <string name="send_sub">Vyber soubory, nebo v libovolné appce Sdílet › PhoneDrop. V počítači přistanou ve Stažených.</string>
+    <string name="share_unpaired">Nejdřív spáruj počítač: otevři PhoneDrop ve Windows a zadej PIN, který vidíš tady.</string>
+    <string name="share_pick">Do kterého počítače?</string>
+    <string name="share_sending">Posílám do %1$s…</string>
+    <string name="share_queued">Zařazeno. Počítač si to vyzvedne, jakmile v něm poběží PhoneDrop.</string>
+    <string name="share_failed">Nepodařilo se odeslat: %1$s</string>
+    <string name="n_outbox_preparing">Připravuji odeslání do počítače…</string>
+    <plurals name="n_outbox_waiting">
+        <item quantity="one">%d soubor čeká na počítač</item>
+        <item quantity="few">%d soubory čekají na počítač</item>
+        <item quantity="many">%d souboru čeká na počítač</item>
+        <item quantity="other">%d souborů čeká na počítač</item>
+    </plurals>
+    <string name="n_outbox_waiting_text">Spusť v počítači PhoneDrop, vyzvedne si je sám.</string>
+    <string name="n_outbox_online">%1$s je připojený</string>
+    <string name="n_outbox_sending">Posílám do %1$s</string>
+    <string name="n_outbox_sent">Odesláno do %1$s</string>
+    <plurals name="n_outbox_sent_many">
+        <item quantity="one">%d soubor</item>
+        <item quantity="few">%d soubory</item>
+        <item quantity="many">%d souboru</item>
+        <item quantity="other">%d souborů</item>
+    </plurals>
+    <string name="n_outbox_cancel">Zrušit</string>
     <string name="n_install">Instalovat %1$s</string>
     <string name="n_install_text">Ťukni a potvrď instalaci</string>
     <string name="n_installed">Nainstalováno</string>

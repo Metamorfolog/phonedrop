@@ -14,6 +14,8 @@ final class Notifier {
     private static final int ID_PROGRESS = 2;
     private static final int ID_UPDATE = 3;
     private static final int ID_SAVED = 4;
+    private static final int ID_OUTBOX = 5;
+    private static final int ID_SENT = 6;
     private static final String CH_SERVICE = "service";
     private static final String CH_FILES = "files";
     private static final String CH_INSTALL = "install";
@@ -142,6 +144,73 @@ final class Notifier {
 
     private static int installId(int session) {
         return 1000 + (session & 0xffff);
+    }
+
+    // ---- telefon → počítač ----
+
+    /** Stav fronty k odeslání: připravuje se / čeká na počítač; prázdná fronta oznámení zruší. */
+    static void outboxChanged(Context ctx) {
+        Outbox box = Outbox.get(ctx);
+        int n = box.pending();
+        if (n == 0) {
+            nm(ctx).cancel(ID_OUTBOX);
+            return;
+        }
+        java.util.Map<String, String> online = box.online();
+        PendingIntent cancel = PendingIntent.getService(ctx, ID_OUTBOX,
+                new Intent(ctx, ReceiverService.class).setAction(ReceiverService.ACTION_OUTBOX_CLEAR),
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        String title = box.preparing() ? ctx.getString(R.string.n_outbox_preparing)
+                : ctx.getResources().getQuantityString(R.plurals.n_outbox_waiting, n, n);
+        String text = online.isEmpty() ? ctx.getString(R.string.n_outbox_waiting_text)
+                : ctx.getString(R.string.n_outbox_online, online.values().iterator().next());
+        Notification note = new Notification.Builder(ctx, CH_SERVICE)
+                .setSmallIcon(R.drawable.ic_stat)
+                .setColor(ctx.getColor(R.color.accent))
+                .setContentTitle(title)
+                .setContentText(text)
+                .setStyle(new Notification.BigTextStyle().bigText(text + "\n" + String.join(", ", box.names())))
+                .setContentIntent(openApp(ctx))
+                .addAction(new Notification.Action.Builder(null, ctx.getString(R.string.n_outbox_cancel), cancel).build())
+                .setProgress(0, 0, box.preparing())
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setShowWhen(false)
+                .build();
+        nm(ctx).notify(ID_OUTBOX, note);
+    }
+
+    static void outboxProgress(Context ctx, String name, String pc, long done, long total) {
+        int pct = total > 0 ? (int) (done * 100 / total) : 0;
+        Notification n = new Notification.Builder(ctx, CH_SERVICE)
+                .setSmallIcon(R.drawable.ic_stat)
+                .setColor(ctx.getColor(R.color.accent))
+                .setContentTitle(ctx.getString(R.string.n_outbox_sending, pc))
+                .setContentText(name + " · " + pct + " %")
+                .setProgress(100, pct, false)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setShowWhen(false)
+                .build();
+        nm(ctx).notify(ID_OUTBOX, n);
+    }
+
+    private static int sentBurst;
+    private static long lastSent;
+
+    static synchronized void outboxSent(Context ctx, String name, String pc) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        sentBurst = now - lastSent < 15_000 ? sentBurst + 1 : 1;
+        lastSent = now;
+        Notification n = new Notification.Builder(ctx, CH_FILES)
+                .setSmallIcon(R.drawable.ic_stat)
+                .setColor(ctx.getColor(R.color.accent))
+                .setContentTitle(ctx.getString(R.string.n_outbox_sent, pc))
+                .setContentText(sentBurst > 1 ? ctx.getResources().getQuantityString(R.plurals.n_outbox_sent_many, sentBurst, sentBurst) : name)
+                .setOnlyAlertOnce(sentBurst > 1)
+                .setAutoCancel(true)
+                .build();
+        nm(ctx).notify(ID_SENT, n);
     }
 
     private static NotificationManager nm(Context ctx) {

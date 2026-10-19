@@ -123,6 +123,17 @@ static class L
     public static string UpdateFailed(string why) => Pick("Update failed: ", "Aktualizace selhala: ") + why;
 
     // Zpětná vazba
+    // Z telefonu do počítače
+    public static string ReceivingFrom(string phone) => Pick($"From {phone}", $"Z telefonu {phone}");
+    public static string ReceivedTitle => Pick("Received from the phone", "Přijato z telefonu");
+    public static string ReceivedIn(string name, string folder) => Pick($"{name} → {folder}", $"{name} → {folder}");
+    public static string ReceivedBalloon(string name) => Pick($"{name} – click to show it", $"{name} – kliknutím ho ukážeš");
+    public static string ReceiveFailed(string name) => Pick($"Couldn't receive {name}", $"Nepodařilo se přijmout {name}");
+    public static string ReceiveIncomplete => Pick("The transfer was interrupted", "Přenos se přerušil");
+    public static string MenuOpenReceived => Pick("Open files from the phone", "Otevřít soubory z telefonu");
+    public static string MenuReceiveFolder => Pick("Folder for files from the phone…", "Složka pro soubory z telefonu…");
+    public static string ReceiveFolderPick => Pick("Where should files from the phone go?", "Kam ukládat soubory z telefonu?");
+    public static string ReceiveFolderSet => Pick("Files from the phone go to", "Soubory z telefonu se ukládají do");
     public static string MenuFeedback => Pick("Send feedback…", "Napsat zpětnou vazbu…");
     public static string FeedbackTitle => Pick("Send feedback", "Zpětná vazba");
     public static string FeedbackIntro => Pick("Found a bug or have an idea? It goes straight to the author.", "Našel jsi chybu nebo máš nápad? Dorazí rovnou autorovi.");
