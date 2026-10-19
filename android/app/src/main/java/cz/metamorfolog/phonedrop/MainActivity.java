@@ -530,9 +530,37 @@ public class MainActivity extends Activity {
         email.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         box.addView(email, new LinearLayout.LayoutParams(MATCH, WRAP));
 
+        // Snímky obrazovky: systémový výběr fotek (bez oprávnění), náhledy s křížkem.
+        fbImages.clear();
+        LinearLayout shots = row();
+        shots.setGravity(Gravity.CENTER_VERTICAL);
+        TextView add = label("+  " + getString(R.string.fb_add_image), 14, R.color.accent, MEDIUM);
+        add.setPadding(px(14), px(8), px(14), px(8));
+        add.setBackground(rounded(R.color.accentTint, 50));
+        shots.addView(add);
+        fbThumbs = row();
+        android.widget.HorizontalScrollView thumbScroll = new android.widget.HorizontalScrollView(this);
+        thumbScroll.setHorizontalScrollBarEnabled(false);
+        thumbScroll.addView(fbThumbs);
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0, WRAP, 1);
+        tlp.leftMargin = px(10);
+        shots.addView(thumbScroll, tlp);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(MATCH, WRAP);
+        slp.topMargin = px(12);
+        box.addView(shots, slp);
+
         TextView status = label(getString(R.string.fb_privacy), 13, R.color.dim, null);
         status.setPadding(0, px(8), 0, 0);
         box.addView(status);
+        fbStatus = status;
+        add.setOnClickListener(v -> {
+            if (fbImages.size() >= Feedback.MAX_IMAGES) {
+                status.setTextColor(color(R.color.bad));
+                status.setText(R.string.fb_images_max);
+                return;
+            }
+            pickScreenshots();
+        });
 
         android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this)
                 .setTitle(R.string.fb_title)
@@ -555,10 +583,12 @@ public class MainActivity extends Activity {
             new Thread(() -> {
                 String error = null;
                 try {
-                    Feedback.send(this, kind[0], text, mail);
+                    Feedback.send(this, kind[0], text, mail, new java.util.ArrayList<>(fbImages));
                 } catch (Feedback.Failed f) {
                     error = f.code == 0 ? getString(R.string.fb_offline)
-                            : f.code == 429 ? getString(R.string.fb_too_many) : getString(R.string.fb_failed, f.code);
+                            : f.code == 429 ? getString(R.string.fb_too_many)
+                            : f.code == 413 || f.attachment ? getString(R.string.fb_image_rejected)
+                            : getString(R.string.fb_failed, f.code);
                 } catch (java.io.IOException e) {
                     error = getString(R.string.fb_offline);
                 }
@@ -585,6 +615,71 @@ public class MainActivity extends Activity {
     }
 
     private static final int REQ_SEND = 41;
+    private static final int REQ_SHOT = 42;
+
+    // Zpětná vazba: obrázky v otevřeném dialogu.
+    private final java.util.List<Feedback.Image> fbImages = new java.util.ArrayList<>();
+    private LinearLayout fbThumbs;
+    private TextView fbStatus;
+
+    private void pickScreenshots() {
+        int left = Feedback.MAX_IMAGES - fbImages.size();
+        Intent pick;
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            pick = new Intent(android.provider.MediaStore.ACTION_PICK_IMAGES);
+            if (left > 1) pick.putExtra(android.provider.MediaStore.EXTRA_PICK_IMAGES_MAX, left);
+        } else {
+            pick = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
+                    .setType("image/*").putExtra(Intent.EXTRA_ALLOW_MULTIPLE, left > 1);
+        }
+        try {
+            startActivityForResult(pick, REQ_SHOT);
+        } catch (android.content.ActivityNotFoundException ignored) {
+        }
+    }
+
+    /** Zmenší a překóduje vybrané obrázky na pozadí a přidá náhledy do dialogu. */
+    private void addScreenshots(java.util.List<android.net.Uri> uris) {
+        new Thread(() -> {
+            for (android.net.Uri u : uris) {
+                Feedback.Image img;
+                try {
+                    img = Feedback.Image.from(this, u);
+                } catch (Exception e) {
+                    runOnUiThread(() -> {
+                        if (fbStatus == null) return;
+                        fbStatus.setTextColor(color(R.color.bad));
+                        fbStatus.setText(R.string.fb_image_bad);
+                    });
+                    continue;
+                }
+                runOnUiThread(() -> {
+                    if (fbThumbs == null || fbImages.size() >= Feedback.MAX_IMAGES) return;
+                    fbImages.add(img);
+                    android.widget.FrameLayout frame = new android.widget.FrameLayout(this);
+                    android.widget.ImageView iv = new android.widget.ImageView(this);
+                    iv.setImageBitmap(img.thumb);
+                    iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                    iv.setBackground(rounded(R.color.line, 10));
+                    iv.setClipToOutline(true);
+                    frame.addView(iv, new android.widget.FrameLayout.LayoutParams(px(52), px(52)));
+                    TextView x = label("✕", 11, R.color.onAccent, MEDIUM);
+                    x.setGravity(Gravity.CENTER);
+                    x.setBackground(rounded(R.color.bad, 50));
+                    x.setContentDescription(getString(R.string.fb_image_remove));
+                    android.widget.FrameLayout.LayoutParams xlp = new android.widget.FrameLayout.LayoutParams(px(20), px(20), Gravity.TOP | Gravity.END);
+                    frame.addView(x, xlp);
+                    LinearLayout.LayoutParams flp = new LinearLayout.LayoutParams(WRAP, WRAP);
+                    flp.rightMargin = px(8);
+                    fbThumbs.addView(frame, flp);
+                    x.setOnClickListener(v -> {
+                        fbImages.remove(img);
+                        fbThumbs.removeView(frame);
+                    });
+                });
+            }
+        }, "phonedrop-shots").start();
+    }
 
     /** Výběr souborů z telefonu → stejná cesta jako Sdílet › PhoneDrop. */
     private void pickToSend() {
@@ -602,6 +697,18 @@ public class MainActivity extends Activity {
     @SuppressWarnings("deprecation")
     protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
+        if (request == REQ_SHOT && result == RESULT_OK && data != null) {
+            java.util.List<android.net.Uri> shots = new java.util.ArrayList<>();
+            if (data.getClipData() != null) {
+                for (int i = 0; i < data.getClipData().getItemCount(); i++) shots.add(data.getClipData().getItemAt(i).getUri());
+            } else if (data.getData() != null) {
+                shots.add(data.getData());
+            }
+            int left = Feedback.MAX_IMAGES - fbImages.size();
+            if (shots.size() > left) shots = shots.subList(0, Math.max(0, left));
+            addScreenshots(shots);
+            return;
+        }
         if (request != REQ_SEND || result != RESULT_OK || data == null) return;
         java.util.ArrayList<android.net.Uri> uris = new java.util.ArrayList<>();
         if (data.getClipData() != null) {

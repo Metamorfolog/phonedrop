@@ -95,13 +95,18 @@ static class Program
         MainForm.SelfTest = true;
         Directory.CreateDirectory(outDir);
         int ok = 0;
-        foreach (Form f in new Form[] { new MainForm([]), new PairForm(), new FeedbackForm() })
+        // Zpětná vazba se otevírá nad hlavním oknem a umí ho vyfotit – i to se tu vyzkouší (GDI+ kodéry v ořezaném exe).
+        var owner = new MainForm([]) { StartPosition = FormStartPosition.Manual, Location = new Point(-10000, -10000), ShowInTaskbar = false };
+        owner.Show();
+        foreach (Form f in new Form[] { new MainForm([]), new PairForm(), new FeedbackForm(owner) })
         {
             f.StartPosition = FormStartPosition.Manual;
             f.Location = new Point(-10000, -10000);
             f.ShowInTaskbar = false;
             f.Show();
             for (int i = 0; i < 10; i++) { Application.DoEvents(); Thread.Sleep(20); }
+            if (f is FeedbackForm fb && !fb.AddWindowShot()) return 2;
+            for (int i = 0; i < 5; i++) { Application.DoEvents(); Thread.Sleep(20); }
             using var bmp = new Bitmap(f.Width, f.Height);
             f.DrawToBitmap(bmp, new Rectangle(Point.Empty, f.Size));
             var file = Path.Combine(outDir, f.GetType().Name + ".png");
@@ -110,6 +115,7 @@ static class Program
             if (f is MainForm main) main.Quit(); else f.Dispose();
             ok++;
         }
+        owner.Quit();
         return ok == 3 ? 0 : 1;
     }
 

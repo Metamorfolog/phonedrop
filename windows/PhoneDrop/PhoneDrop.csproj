@@ -10,7 +10,7 @@
     <RootNamespace>PhoneDrop</RootNamespace>
     <ApplicationIcon>Assets\PhoneDrop.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <Product>PhoneDrop</Product>
     <Description>Přetáhni soubor nebo APK do okénka a pošli ho do telefonu</Description>
     <SatelliteResourceLanguages>cs;en</SatelliteResourceLanguages>

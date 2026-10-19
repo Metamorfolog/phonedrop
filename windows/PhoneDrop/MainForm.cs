@@ -286,7 +286,7 @@ public sealed class MainForm : Form
     void OpenFeedback()
     {
         ShowWindow();
-        using var dlg = new FeedbackForm();
+        using var dlg = new FeedbackForm(this);
         if (dlg.ShowDialog(this) == DialogResult.OK && !busy) card.Set(CardKind.Ok, L.FeedbackThanks, L.FeedbackThanksDetail);
     }
 

@@ -16,7 +16,9 @@ installer right away: one tap on **Install** and you're done. No cable, no `adb`
 - Light and dark theme, English and Czech, on both sides.
 - Both apps update themselves from GitHub Releases (the download is checked against `SHA256SUMS.txt`;
   Android additionally only accepts an APK signed with the same key).
-- Send feedback straight from either app (⋯ → *Send feedback* on Windows, *Feedback* on the phone).
+- Send feedback straight from either app (⋯ → *Send feedback* on Windows, *Feedback* on the phone), with up to
+  three screenshots: *Window snapshot*, *Add image…* or Ctrl+V on Windows, the photo picker on the phone.
+  Images are shrunk and stripped of metadata (EXIF location etc.) before they leave the device.
 - Every release is built from this repository by GitHub Actions, not on someone's PC.
 
 ```

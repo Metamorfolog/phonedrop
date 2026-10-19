@@ -18,8 +18,8 @@ android {
         minSdk 29
         targetSdk 36
         // Vydání (GitHub Actions) bere verzi ze značky: -PverName=X.Y.Z -PverCode=X*10000+Y*100+Z
-        versionCode Integer.parseInt((project.findProperty('verCode') ?: '10400').toString())
-        versionName((project.findProperty('verName') ?: '1.4.0').toString())
+        versionCode Integer.parseInt((project.findProperty('verCode') ?: '10500').toString())
+        versionName((project.findProperty('verName') ?: '1.5.0').toString())
         // Odkud se berou aktualizace (poslední vydání na GitHubu); pro testy -PupdateUrl=…
         buildConfigField 'String', 'UPDATE_URL',
                 "\"${project.findProperty('updateUrl') ?: 'https://api.github.com/repos/Metamorfolog/phonedrop/releases/latest'}\""

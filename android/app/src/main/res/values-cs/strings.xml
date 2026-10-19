@@ -44,7 +44,12 @@
     <string name="fb_other">Jiné</string>
     <string name="fb_message_hint">Co se stalo, nebo co bys od PhoneDropu chtěl?</string>
     <string name="fb_email_hint">E-mail (nepovinný, jen pro odpověď)</string>
-    <string name="fb_privacy">Odešle se tvůj text, verze aplikace a model telefonu. IP adresa se neukládá.</string>
+    <string name="fb_privacy">Odešle se tvůj text, přiložené snímky, verze aplikace a model telefonu. Snímky zkontroluj, jestli na nich nejsou osobní údaje. IP adresa se neukládá.</string>
+    <string name="fb_add_image">Přidat snímek</string>
+    <string name="fb_images_max">Nejvýš 3 obrázky.</string>
+    <string name="fb_image_bad">Ten obrázek nejde načíst.</string>
+    <string name="fb_image_rejected">Server obrázek nepřijal. Zkus jiný.</string>
+    <string name="fb_image_remove">Odebrat obrázek</string>
     <string name="fb_send">Odeslat</string>
     <string name="fb_cancel">Zrušit</string>
     <string name="fb_too_short">Napiš prosím aspoň pár slov.</string>

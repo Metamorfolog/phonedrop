@@ -122,7 +122,6 @@ static class L
     public static string UpdateBadChecksum => Pick("The download doesn't match its checksum, update skipped.", "Stažený soubor nesedí s kontrolním součtem, aktualizace přeskočena.");
     public static string UpdateFailed(string why) => Pick("Update failed: ", "Aktualizace selhala: ") + why;
 
-    // Zpětná vazba
     // Z telefonu do počítače
     public static string ReceivingFrom(string phone) => Pick($"From {phone}", $"Z telefonu {phone}");
     public static string ReceivedTitle => Pick("Received from the phone", "Přijato z telefonu");
@@ -134,6 +133,7 @@ static class L
     public static string MenuReceiveFolder => Pick("Folder for files from the phone…", "Složka pro soubory z telefonu…");
     public static string ReceiveFolderPick => Pick("Where should files from the phone go?", "Kam ukládat soubory z telefonu?");
     public static string ReceiveFolderSet => Pick("Files from the phone go to", "Soubory z telefonu se ukládají do");
+    // Zpětná vazba
     public static string MenuFeedback => Pick("Send feedback…", "Napsat zpětnou vazbu…");
     public static string FeedbackTitle => Pick("Send feedback", "Zpětná vazba");
     public static string FeedbackIntro => Pick("Found a bug or have an idea? It goes straight to the author.", "Našel jsi chybu nebo máš nápad? Dorazí rovnou autorovi.");
@@ -145,9 +145,18 @@ static class L
     public static string FeedbackPlaceholder => Pick("What happened, or what would you like PhoneDrop to do?", "Co se stalo, nebo co bys od PhoneDropu chtěl?");
     public static string FeedbackEmail => Pick("E-MAIL (OPTIONAL, ONLY FOR A REPLY)", "E-MAIL (NEPOVINNÝ, JEN PRO ODPOVĚĎ)");
     public static string FeedbackEmailPlaceholder => Pick("you@example.com", "ty@example.cz");
-    public static string FeedbackPrivacy => Pick("Sent: your text, the app version and the Windows version. Your IP address isn't stored.",
-        "Odešle se tvůj text, verze aplikace a verze Windows. IP adresa se neukládá.");
+    public static string FeedbackPrivacy => Pick("Sent: your text, any images, the app version and the Windows version. Check images for personal details. Your IP address isn't stored.",
+        "Odešle se tvůj text, přiložené obrázky, verze aplikace a verze Windows. Obrázky zkontroluj, jestli na nich nejsou osobní údaje. IP adresa se neukládá.");
     public static string FeedbackSend => Pick("Send", "Odeslat");
+    public static string FeedbackShotWindow => Pick("Window snapshot", "Snímek okna");
+    public static string FeedbackShotFile => Pick("Add image…", "Přidat obrázek…");
+    public static string FeedbackShotPaste => Pick("or Ctrl+V", "nebo Ctrl+V");
+    public static string FeedbackShotPick => Pick("Images", "Obrázky");
+    public static string FeedbackShotMax => Pick("Up to 3 images.", "Nejvýš 3 obrázky.");
+    public static string FeedbackShotBad => Pick("That file can't be read as an image.", "Tenhle soubor nejde načíst jako obrázek.");
+    public static string FeedbackShotTooBig => Pick("That image is too large even after shrinking.", "Obrázek je moc velký i po zmenšení.");
+    public static string FeedbackShotRejected => Pick("The server didn't accept an image. Try a different one.", "Server obrázek nepřijal. Zkus jiný.");
+    public static string FeedbackShotRemove => Pick("Remove", "Odebrat");
     public static string FeedbackTooShort => Pick("Please write a few words first.", "Napiš prosím aspoň pár slov.");
     public static string FeedbackBadEmail => Pick("That e-mail doesn't look right.", "Ten e-mail nevypadá správně.");
     public static string FeedbackSending => Pick("Sending…", "Odesílám…");

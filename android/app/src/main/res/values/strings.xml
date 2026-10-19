@@ -47,7 +47,12 @@
     <string name="fb_other">Other</string>
     <string name="fb_message_hint">What happened, or what would you like PhoneDrop to do?</string>
     <string name="fb_email_hint">E-mail (optional, only for a reply)</string>
-    <string name="fb_privacy">Sent: your text, the app version and your phone model. Your IP address isn\'t stored.</string>
+    <string name="fb_privacy">Sent: your text, any screenshots, the app version and your phone model. Check screenshots for personal details. Your IP address isn\'t stored.</string>
+    <string name="fb_add_image">Add screenshot</string>
+    <string name="fb_images_max">Up to 3 images.</string>
+    <string name="fb_image_bad">That image can\'t be read.</string>
+    <string name="fb_image_rejected">The server didn\'t accept an image. Try a different one.</string>
+    <string name="fb_image_remove">Remove image</string>
     <string name="fb_send">Send</string>
     <string name="fb_cancel">Cancel</string>
     <string name="fb_too_short">Please write a few words first.</string>
