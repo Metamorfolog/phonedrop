@@ -1,0 +1,29 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'cz.metamorfolog.phonedrop'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'cz.metamorfolog.phonedrop'
+        // MediaStore.Downloads + RELATIVE_PATH (Download/Drop) bez oprávnění k úložišti.
+        minSdk 29
+        targetSdk 36
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
