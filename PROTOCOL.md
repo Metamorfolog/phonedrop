@@ -25,7 +25,7 @@ V síti se ohlašuje přes mDNS/DNS-SD jako `_phonedrop._tcp` s TXT `id=<UUID te
 
 Mimo domácí síť telefon nebude přímo dosažitelný. Plán:
 
-1. Relay na apexu (např. `phonedrop.apexpiksel.cz`) s HTTPS. Telefon k němu drží odchozí spojení (long-poll / WebSocket)
+1. Relay na vlastním serveru (např. `relay.example.com`) s HTTPS. Telefon k němu drží odchozí spojení (long-poll / WebSocket)
    identifikované svým `id`; počítač posílá stejné požadavky na `https://relay/<id>/upload?name=…` se stejným Bearer tokenem.
 2. Relay jen přeposílá proud bajtů – token ověřuje dál telefon, takže relay nemusí znát tajemství.
 3. Ve Windows appce přibude implementace `IPhoneLink` (`RelayLink`) vedle `LanLink`; `Sender.ConnectAsync` zkusí LAN, pak relay.

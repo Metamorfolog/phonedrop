@@ -1,28 +1,50 @@
 # PhoneDrop
 
-Náhrada za „adb install“ přes wireless debugging: **přetáhni soubor do okénka ve Windows a je v telefonu.**
+**English** · [Čeština](README.cs.md)
 
-- `.apk` → telefon rovnou otevře systémovou instalaci (jedno ťuknutí na **Instalovat**; tichá instalace bez rootu/ADB nejde).
-- ostatní soubory → `Stažené/Drop` (Download/Drop), s oznámením, které soubor otevře.
-- Funguje v místní síti (Wi-Fi). Telefon se najde sám přes mDNS, i když se mu změní IP.
+Drag a file into a small window on Windows and it lands on your Android phone. APKs open the system
+installer right away: one tap on **Install** and you're done. No cable, no `adb`, no wireless debugging.
+
+- **APK** → the phone opens the Android installer (a single tap to confirm; silent installs aren't possible without root or ADB).
+- **Anything else** → saved to `Downloads/Drop`, with a notification that opens it.
+- Works on your local network. The PC finds the phone by itself (mDNS), even when its IP address changes.
+- Light and dark theme, English and Czech, on both sides.
 
 ```
-android/   přijímač pro Android (Java, bez knihoven, minSdk 29)
-windows/   okénko pro Windows (.NET 10, WinForms) + příkazová řádka
-PROTOCOL.md  HTTP protokol a plán relay mimo domácí síť
+android/     receiver for Android (Java, no libraries, Android 10+)
+windows/     the drop window for Windows (.NET 10, WinForms) + a command line
+website/     the project page (static HTML, no build step)
+PROTOCOL.md  the HTTP protocol between the two (in Czech)
 ```
 
-## Sestavení
+## Getting started
 
-**Android** (Gradle 9.1 + AGP 9.0.1, JDK z Android Studia):
+1. **Phone:** install `PhoneDrop.apk`, open it and allow notifications. It shows its address and a **PIN**.
+   Tap *Allow* next to *Install apps* and *Run in background* (otherwise the phone stops receiving when idle).
+2. **Windows:** run `PhoneDrop.exe` (needs the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)).
+   Pick the phone from the list (or type its address) and enter the PIN.
+3. Drop files into the window. Closing it keeps PhoneDrop in the notification area; quit from the ⋯ menu.
+4. Optional: ⋯ → *Explorer: Send to › Phone* adds **Send to › Phone (PhoneDrop)** to the right-click menu.
+
+### How APK installs work
+
+- If PhoneDrop is open on the phone, the *Install / Update* dialog appears immediately.
+- If it's in the background, Android doesn't let apps open windows on their own, so a notification
+  **Install … – tap to confirm** appears instead; tapping it opens the dialog.
+- The very first time, Android asks you to allow "Install unknown apps" for PhoneDrop.
+- Google Play Protect may offer to scan an unfamiliar APK: *More details → Install without scanning*.
+- The Windows window waits for the result and shows *Installed ✓ / cancelled / failed (reason)*.
+
+## Building
+
+**Android** (Gradle 9.1, AGP 9.0.1, JDK 21+ – the one bundled with Android Studio works):
 
 ```bash
 cd android
-JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew assembleDebug
+./gradlew assembleRelease
 ```
 
-APK: `android/app/build/outputs/apk/debug/app-debug.apk`. `android/local.properties` (není v gitu) musí obsahovat
-`sdk.dir=C:/Users/piklr/dev/android-sdk` (s lomítky).
+`android/local.properties` (not in git) must point at the Android SDK with forward slashes, e.g. `sdk.dir=C:/Android/sdk`.
 
 **Windows** (.NET 10 SDK):
 
@@ -31,69 +53,27 @@ cd windows/PhoneDrop
 dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o ../publish
 ```
 
-Výsledek: `windows/publish/PhoneDrop.exe` (~260 kB, potřebuje .NET 10 Desktop Runtime). Bez runtime:
-`--self-contained true` (větší exe). Ikonu přegeneruje `windows/make-icon.ps1`.
-
-## První spuštění
-
-1. **Telefon:** nainstaluj APK (jednou přes kabel/adb nebo stažením), otevři PhoneDrop, povol oznámení.
-   Ukáže adresu a **PIN**. Klepni na *Povolit instalaci aplikací* a *Vypnout optimalizaci baterie*
-   (jinak telefon se zhasnutým displejem v Doze přestane přijímat).
-2. **Windows:** spusť `PhoneDrop.exe`. Otevře se párování – vyber telefon ze seznamu (nebo opiš adresu) a zadej PIN.
-3. Přetáhni soubor do okénka. Křížek okno jen schová do oznamovací oblasti; konec přes ⋯ → Ukončit.
-4. Volitelně ⋯ → *V Průzkumníku: Odeslat do › Telefon* – pak pravé tlačítko na soubor → **Odeslat do › Telefon (PhoneDrop)**
-   (ve Windows 11 pod „Zobrazit další možnosti“). Když už okno běží, soubory se předají jemu.
-
-### Jak probíhá instalace APK
-
-- Je-li PhoneDrop v telefonu otevřený, systémový dialog *Instalovat / Aktualizovat* se ukáže hned.
-- Je-li na pozadí, Android aplikacím nedovolí otevřít okno samo (Background Activity Launch) – objeví se oznámení
-  **Instalovat … – ťukni a potvrď**, ťuknutí otevře dialog.
-- Při úplně první instalaci se systém zeptá na povolení „Instalovat neznámé aplikace“ pro PhoneDrop (jednou).
-- Google Play Protect může u nového/neznámého APK nabídnout sken – *Další podrobnosti → Instalovat bez skenování*.
-- Okénko ve Windows čeká na výsledek a ukáže *nainstalováno ✓ / zrušeno / selhalo (důvod)*.
-
-## Vzhled
-
-Světlý i tmavý, výchozí podle systému (stejné barvy na obou stranách).
-
-- **Windows:** ⋯ → *Vzhled* (Automaticky / Světlý / Tmavý), nebo `PhoneDrop.exe --theme auto|light|dark`.
-  V režimu „Automaticky“ se okno přebarví samo, když ve Windows přepneš režim aplikací.
-- **Android:** sekce *Vzhled* dole v appce (Systém / Světlý / Tmavý).
-
-## Jazyky
-
-Čeština a angličtina, výchozí podle jazyka systému.
-
-- **Windows:** ⋯ → *Jazyk* (Automaticky / English / Čeština), okno se hned přestaví. Nebo `PhoneDrop.exe --lang auto|en|cs`.
-  Texty jsou v `windows/PhoneDrop/Strings.cs` – další jazyk = další parametr v `Pick` a řádek v `Languages`.
-- **Android:** podle jazyka telefonu, případně Nastavení → Aplikace → PhoneDrop → Jazyk (Android 13+).
-  Texty v `res/values/strings.xml` (angličtina) a `res/values-cs/strings.xml`; další jazyk = další složka `values-xx`
-  a řádek v `res/xml/locales_config.xml`.
-- Chyby z telefonu chodí do počítače jako kódy (`no_space`, `bad_pin`, …) a překládá je až Windows – hláška je
-  v jazyce počítače, i když má telefon jiný.
-
-## Příkazová řádka
+## Command line
 
 ```
-PhoneDrop.exe --discover               telefony v síti (mDNS)
+PhoneDrop.exe --discover                 phones on the network (mDNS)
 PhoneDrop.exe --pair 192.168.1.20:8765 123456
-PhoneDrop.exe --send app.apk foto.jpg  pošle soubory (APK počká na instalaci)
-PhoneDrop.exe --status                 ověří spojení
-PhoneDrop.exe --sendto on|off          položka „Odeslat do“
+PhoneDrop.exe --send app.apk photo.jpg   send files (waits for APK installs)
+PhoneDrop.exe --status                   check the connection
+PhoneDrop.exe --sendto on|off            the Explorer "Send to" entry
+PhoneDrop.exe --lang auto|en|cs          language
+PhoneDrop.exe --theme auto|light|dark    appearance
 ```
 
-## Test na emulátoru
+Testing with the Android emulator: it sits behind NAT, so forward the port and pair with `127.0.0.1`:
+`adb forward tcp:8765 tcp:8765`.
 
-Emulátor je za NAT, mDNS z Windows nevidí – použij přesměrování portu:
+## Limitations
 
-```bash
-adb forward tcp:8765 tcp:8765
-PhoneDrop.exe --pair 127.0.0.1:8765 <PIN z emulátoru>
-PhoneDrop.exe --send app-debug.apk
-```
+- Local network only. Traffic is plain HTTP with a pairing token, fine for a home Wi-Fi, not for public networks.
+  A relay for use outside the home network is planned (see PROTOCOL.md).
+- Folders and split APKs (`.apks`, `.xapk`) aren't supported yet.
 
-## Omezení
+## License
 
-- Jen LAN; spojení je nešifrované HTTP s tokenem (viz PROTOCOL.md). Relay mimo domácí síť je připravený v rozhraní, ne hotový.
-- Složky se neposílají (jen soubory). Split APK (`.apks`, `.xapk`) zatím ne.
+[MIT](LICENSE)
