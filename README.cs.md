@@ -33,7 +33,7 @@ cd windows/PhoneDrop
 dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o ../publish
 ```
 
-Výsledek: `windows/publish/PhoneDrop.exe` (~260 kB, potřebuje .NET 10 Desktop Runtime). Bez runtime:
+Výsledek: `windows/publish/PhoneDrop.exe` (~350 kB, potřebuje .NET 10 Desktop Runtime). Bez runtime:
 `--self-contained true` (větší exe). Ikonu přegeneruje `windows/make-icon.ps1`.
 
 ## První spuštění
