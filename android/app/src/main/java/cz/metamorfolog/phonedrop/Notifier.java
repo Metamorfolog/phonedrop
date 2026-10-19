@@ -34,6 +34,7 @@ final class Notifier {
     static Notification service(Context ctx, String address, String pin) {
         return new Notification.Builder(ctx, CH_SERVICE)
                 .setSmallIcon(R.drawable.ic_stat)
+                .setColor(ctx.getColor(R.color.accent))
                 .setContentTitle("PhoneDrop čeká na soubory")
                 .setContentText(address + " · PIN " + pin)
                 .setContentIntent(openApp(ctx))
@@ -46,6 +47,7 @@ final class Notifier {
         int pct = total > 0 ? (int) (done * 100 / total) : 0;
         Notification n = new Notification.Builder(ctx, CH_SERVICE)
                 .setSmallIcon(R.drawable.ic_stat)
+                .setColor(ctx.getColor(R.color.accent))
                 .setContentTitle("Přijímám " + name)
                 .setContentText(pct + " %")
                 .setProgress(100, pct, total <= 0)
@@ -66,6 +68,7 @@ final class Notifier {
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         Notification n = new Notification.Builder(ctx, CH_FILES)
                 .setSmallIcon(R.drawable.ic_stat)
+                .setColor(ctx.getColor(R.color.accent))
                 .setContentTitle("Uloženo: " + name)
                 .setContentText(Inbox.DIR)
                 .setContentIntent(open)
@@ -79,6 +82,7 @@ final class Notifier {
         PendingIntent pi = openApp(ctx);
         Notification n = new Notification.Builder(ctx, CH_INSTALL)
                 .setSmallIcon(R.drawable.ic_stat)
+                .setColor(ctx.getColor(R.color.accent))
                 .setContentTitle("Instalovat " + name)
                 .setContentText("Ťukni a potvrď instalaci")
                 .setContentIntent(pi)
@@ -92,6 +96,7 @@ final class Notifier {
     static void installDone(Context ctx, int session, String title, String text) {
         Notification n = new Notification.Builder(ctx, CH_FILES)
                 .setSmallIcon(R.drawable.ic_stat)
+                .setColor(ctx.getColor(R.color.accent))
                 .setContentTitle(title)
                 .setContentText(text)
                 .setGroup("install-" + session)

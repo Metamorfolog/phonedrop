@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#F2F5F1</color>
+    <color name="card">#FFFFFF</color>
+    <color name="text">#16211A</color>
+    <color name="dim">#66736A</color>
+    <color name="faint">#A3ADA6</color>
+    <color name="line">#E3E8E3</color>
+
+    <color name="accent">#24A653</color>
+    <color name="accentTint">#E1F4E6</color>
+    <color name="onAccent">#FFFFFF</color>
+    <color name="heroStart">#3DC46B</color>
+    <color name="heroEnd">#14874A</color>
+    <color name="heroGlow">#9FF0B8</color>
+
+    <color name="warn">#D9822B</color>
+    <color name="warnTint">#FDEEDC</color>
+    <color name="blue">#3B82F6</color>
+    <color name="blueTint">#E3EDFE</color>
+    <color name="violet">#8B5CF6</color>
+    <color name="violetTint">#EEE7FE</color>
+    <color name="bad">#DC4A4A</color>
+    <color name="badTint">#FDE5E5</color>
+    <color name="shadow">#1F3A2A</color>
+</resources>

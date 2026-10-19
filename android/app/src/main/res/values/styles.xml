@@ -1,22 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.PhoneDrop" parent="android:Theme.DeviceDefault.NoActionBar">
-        <item name="android:windowBackground">@android:color/black</item>
-        <item name="android:statusBarColor">@android:color/black</item>
-        <item name="android:navigationBarColor">@android:color/black</item>
+    <!-- Světlý vzhled; values-night/ má tmavou variantu se stejnými názvy barev. -->
+    <style name="Theme.PhoneDrop" parent="android:Theme.DeviceDefault.Light.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:colorAccent">@color/accent</item>
     </style>
-
-    <color name="text">#E6E6E6</color>
-    <color name="dim">#7A7A7A</color>
-    <color name="accent">#7FD18B</color>
-    <color name="warn">#F0A35E</color>
-    <color name="warnBg">#2A1F14</color>
-    <color name="bad">#F07171</color>
-    <color name="faint">#4A4A4A</color>
-    <color name="surface">#161616</color>
-    <color name="surface2">#262626</color>
-    <color name="line">#3A3A3A</color>
-    <color name="accentDim">#4D7FD18B</color>
-    <color name="accentBg">#1F2E21</color>
-    <color name="onAccent">#0C1E10</color>
 </resources>
