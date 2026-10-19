@@ -8,3 +8,6 @@ windows/publish/
 *.iml
 .idea/
 .vs/
+android/keystore.properties
+*.jks
+*.keystore

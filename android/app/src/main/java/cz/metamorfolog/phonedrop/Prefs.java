@@ -3,6 +3,7 @@ package cz.metamorfolog.phonedrop;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.SystemClock;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -21,6 +22,28 @@ import java.util.UUID;
 final class Prefs {
     static final int PORT = 8765;
     private static final int MAX_PIN_FAILURES = 5;
+    private static final long PAIR_LOCK_MS = 60_000;
+    private static final long PAIR_GRACE_MS = 120_000;
+
+    /**
+     * Párovat jde jen s otevřenou appkou (PIN je vidět) a chvíli po jejím opuštění, kdyby zhasl displej.
+     * Po zabití procesu je párování zavřené. Hodnota je SystemClock.elapsedRealtime().
+     */
+    private static volatile long pairingOpenUntil;
+
+    static void pairingWindow(boolean appVisible) {
+        pairingOpenUntil = appVisible ? Long.MAX_VALUE : SystemClock.elapsedRealtime() + PAIR_GRACE_MS;
+    }
+
+    static boolean pairingOpen() {
+        return SystemClock.elapsedRealtime() < pairingOpenUntil;
+    }
+
+    /** Kolik sekund je párování ještě zamčené po sérii špatných PINů (0 = není). */
+    synchronized long pairLockSeconds() {
+        long left = sp.getLong("pairLockedUntil", 0) - System.currentTimeMillis();
+        return left > 0 ? (left + 999) / 1000 : 0;
+    }
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final SharedPreferences sp;
@@ -67,8 +90,13 @@ final class Prefs {
     synchronized String pair(String pin, String client) {
         if (pin == null || !MessageDigest.isEqual(utf8(pin), utf8(pin()))) {
             int fails = sp.getInt("pinFailures", 0) + 1;
-            if (fails >= MAX_PIN_FAILURES) newPin();
-            else sp.edit().putInt("pinFailures", fails).apply();
+            if (fails >= MAX_PIN_FAILURES) {
+                // Nový PIN a minutová pauza: hrubou silou by uhodnutí trvalo měsíce.
+                newPin();
+                sp.edit().putLong("pairLockedUntil", System.currentTimeMillis() + PAIR_LOCK_MS).apply();
+            } else {
+                sp.edit().putInt("pinFailures", fails).apply();
+            }
             return null;
         }
         byte[] raw = new byte[32];

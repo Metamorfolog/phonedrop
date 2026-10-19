@@ -21,9 +21,14 @@ public sealed class MainForm : Form
     bool checking;
     bool? online;
     DateTime lastCheck, lastDiscovery;
+    // Aktualizace: kontrola po startu a pak každých 6 h.
+    readonly System.Windows.Forms.Timer updateTimer = new() { Interval = 6 * 60 * 60 * 1000 };
+    readonly ToolStripMenuItem updateItem;
+    UpdateInfo? update;
+    bool updating;
     bool hintShown;
 
-    public MainForm(string[] initialFiles)
+    public MainForm(string[] initialFiles, bool justUpdated = false)
     {
         // Jako z návrháře: rozvržení se postaví pro 96 DPI a ResumeLayout ho přepočítá na DPI monitoru.
         SuspendLayout();
@@ -63,6 +68,13 @@ public sealed class MainForm : Form
         cardHost.Controls.Add(card);
 
         var menu = new ContextMenuStrip { Renderer = new DarkMenuRenderer(), ShowImageMargin = false, ShowCheckMargin = true, Font = Theme.UiFont(9.5f) };
+        updateItem = new ToolStripMenuItem(L.MenuCheckUpdates, null, async (_, _) =>
+        {
+            if (update != null) await InstallUpdateAsync();
+            else await CheckUpdateAsync(manual: true);
+        });
+        menu.Items.Add(updateItem);
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(L.MenuPair, null, (_, _) => Pair());
         sendToItem = new ToolStripMenuItem(L.MenuSendTo, null, (_, _) => ToggleSendTo());
         topItem = new ToolStripMenuItem(L.MenuTopMost, null, (_, _) => ToggleTopMost());
@@ -101,6 +113,7 @@ public sealed class MainForm : Form
 
         tray = new NotifyIcon { Icon = AppIcon, Text = "PhoneDrop", Visible = true, ContextMenuStrip = menu };
         tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) ShowWindow(); };
+        tray.BalloonTipClicked += async (_, _) => { if (update != null) { ShowWindow(); await InstallUpdateAsync(); } };
 
         // Drop funguje kamkoli do okna, ne jen do rámečku.
         foreach (Control c in new Control[] { this, header, zoneHost, zone, cardHost, card })
@@ -120,12 +133,16 @@ public sealed class MainForm : Form
         if (config.IsPaired) card.Set(CardKind.Info, L.Ready, L.ReadyDetail);
         else card.Set(CardKind.Info, L.NotPairedTitle, L.NotPairedHint);
         watch.Tick += async (_, _) => await CheckPhoneAsync();
+        updateTimer.Tick += async (_, _) => await CheckUpdateAsync(manual: false);
+        if (justUpdated) card.Set(CardKind.Ok, L.UpdatedTo("v" + Updater.Current.ToString(3)), L.ReadyDetail);
         Shown += (_, _) =>
         {
             if (!config.IsPaired) Pair();
             Enqueue(initialFiles);
             watch.Start();
             _ = CheckPhoneAsync(force: true);
+            updateTimer.Start();
+            _ = CheckUpdateAsync(manual: false);
         };
         ResumeLayout(false);
         PerformLayout();
@@ -359,6 +376,60 @@ public sealed class MainForm : Form
             card.Set(CardKind.Ok, L.PhoneBack, L.ReadyDetail);
     }
 
+    /// <summary>Zjistí novou verzi; tiše při automatické kontrole, s výsledkem v kartě při ruční.</summary>
+    async Task CheckUpdateAsync(bool manual)
+    {
+        if (updating) return;
+        UpdateInfo? found;
+        try
+        {
+            found = await Updater.CheckAsync(CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            if (manual && !busy) card.Set(CardKind.Error, L.MenuCheckUpdates, L.UpdateCheckFailed);
+            return;
+        }
+        if (found == null)
+        {
+            if (manual && !busy) card.Set(CardKind.Ok, L.MenuCheckUpdates, L.UpToDate("v" + Updater.Current.ToString(3)));
+            return;
+        }
+        bool isNew = update?.Version != found.Version;
+        update = found;
+        updateItem.Text = L.MenuUpdateTo(found.Tag);
+        updateItem.Font = new Font(updateItem.Font, FontStyle.Bold);
+        if (!busy && (manual || CardReplaceable())) card.Set(CardKind.Info, L.UpdateAvailable(found.Tag), L.UpdateAvailableHint);
+        if (isNew && !manual) tray.ShowBalloonTip(8000, L.UpdateAvailable(found.Tag), L.UpdateBalloon, ToolTipIcon.Info);
+    }
+
+    /// <summary>Stáhne, ověří a nainstaluje novou verzi, pak se restartuje.</summary>
+    async Task InstallUpdateAsync()
+    {
+        if (update == null || updating || busy) return;
+        updating = true;
+        busy = true;
+        try
+        {
+            var progress = new Progress<double>(p => card.Set(CardKind.Busy, L.UpdateAvailable(update.Tag), L.Updating, p));
+            card.Set(CardKind.Busy, L.UpdateAvailable(update.Tag), L.Updating, 0);
+            var file = await Updater.DownloadAsync(update, progress, CancellationToken.None);
+            Updater.Install(file);
+            Updater.Restart();
+            Program.Restart = false;
+            Quit();
+        }
+        catch (Exception e)
+        {
+            card.Set(CardKind.Error, L.UpdateAvailable(update.Tag), e is PhoneException ? e.Message : L.UpdateFailed(e.Message));
+        }
+        finally
+        {
+            updating = false;
+            busy = false;
+        }
+    }
+
     /// <summary>Kartu smí přepsat stav telefonu, jen když neukazuje výsledek přenosu.</summary>
     bool CardReplaceable() =>
         card.Kind == CardKind.Info || (card.Kind == CardKind.Error && card.Title == (config.DeviceName ?? L.Phone));
@@ -399,6 +470,7 @@ public sealed class MainForm : Form
         }
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnSystemPreferences;
         watch.Dispose();
+        updateTimer.Dispose();
         tray.Dispose();
         base.OnFormClosing(e);
     }

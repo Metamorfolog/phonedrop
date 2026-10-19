@@ -83,6 +83,20 @@ static class Cli
                 if (args[1] == "off") SendTo.Uninstall(); else SendTo.Install();
                 Console.WriteLine(SendTo.Installed ? L.CliSendToOn : L.CliSendToOff);
                 return 0;
+            case "--update":
+            {
+                var update = await Updater.CheckAsync(ct);
+                if (update == null)
+                {
+                    Console.WriteLine(L.UpToDate(Updater.Current.ToString(3)));
+                    return 0;
+                }
+                Console.WriteLine(L.UpdateAvailable(update.Tag));
+                var file = await Updater.DownloadAsync(update, null, ct);
+                Updater.Install(file);
+                Console.WriteLine(L.UpdatedTo(update.Tag));
+                return 0;
+            }
             case "--theme" when args.Length >= 2:
                 config.Appearance = args[1] is "light" or "dark" ? args[1] : "auto";
                 config.Save();

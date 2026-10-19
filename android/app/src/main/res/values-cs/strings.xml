@@ -6,7 +6,7 @@
     <string name="status_off">Vypnuto</string>
 
     <string name="hero_pin">PIN pro spárování</string>
-    <string name="hero_hint">Ve Windows: PhoneDrop → ⋯ → Spárovat telefon</string>
+    <string name="hero_hint">Ve Windows: PhoneDrop → ⋯ → Spárovat telefon. Párovat jde, jen když je tahle obrazovka otevřená.</string>
     <string name="hero_off_title">Příjem je vypnutý</string>
     <string name="hero_off_text">Počítač teď telefon nenajde.</string>
     <string name="hero_turn_on">Zapnout příjem</string>
@@ -34,6 +34,18 @@
 
     <string name="section_pcs">Počítače</string>
     <string name="section_look">Vzhled</string>
+    <string name="section_update">Aktualizace</string>
+    <string name="version_title">Verze %1$s</string>
+    <string name="upd_idle">Ťukni pro kontrolu aktualizací</string>
+    <string name="upd_checking">Kontroluji…</string>
+    <string name="upd_latest">Máš nejnovější verzi</string>
+    <string name="upd_available">Je dostupná verze %1$s</string>
+    <string name="upd_downloading">Stahuji… %1$d %%</string>
+    <string name="upd_installing">Potvrď instalaci</string>
+    <string name="upd_failed">Aktualizaci se nepodařilo ověřit ani stáhnout</string>
+    <string name="upd_button">Aktualizovat</string>
+    <string name="n_update">PhoneDrop %1$s je k dispozici</string>
+    <string name="n_update_text">Ťukni a aktualizuj</string>
     <string name="theme_system">Systém</string>
     <string name="theme_light">Světlý</string>
     <string name="theme_dark">Tmavý</string>

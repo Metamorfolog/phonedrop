@@ -59,7 +59,7 @@ public class ReceiverService extends Service {
         prefs = new Prefs(this);
         inbox = new Inbox(this);
         Notifier.channels(this);
-        startForeground(Notifier.ID_SERVICE, Notifier.service(this, address(), prefs.pin()),
+        startForeground(Notifier.ID_SERVICE, Notifier.service(this, address()),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         server = new HttpServer(Prefs.PORT, this::handle);
         try {
@@ -77,7 +77,17 @@ public class ReceiverService extends Service {
         };
         getSystemService(ConnectivityManager.class).registerDefaultNetworkCallback(netCallback);
         changed();
+        updateTick.run();
     }
+
+    /** Kontrola aktualizací i bez otevření appky (Updater sám hlídá, aby to bylo nejvýš jednou za 6 h). */
+    private final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable updateTick = new Runnable() {
+        @Override public void run() {
+            Updater.check(ReceiverService.this, false);
+            handler.postDelayed(this, 60 * 60 * 1000L);
+        }
+    };
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -87,6 +97,7 @@ public class ReceiverService extends Service {
     @Override
     public void onDestroy() {
         running = false;
+        handler.removeCallbacks(updateTick);
         if (netCallback != null) {
             try {
                 getSystemService(ConnectivityManager.class).unregisterNetworkCallback(netCallback);
@@ -111,7 +122,7 @@ public class ReceiverService extends Service {
 
     private void refresh() {
         getSystemService(android.app.NotificationManager.class)
-                .notify(Notifier.ID_SERVICE, Notifier.service(this, address(), prefs.pin()));
+                .notify(Notifier.ID_SERVICE, Notifier.service(this, address()));
         changed();
     }
 
@@ -165,6 +176,14 @@ public class ReceiverService extends Service {
                 return ok(new JSONObject().put("ok", true).put("app", "PhoneDrop").put("v", 1)
                         .put("id", prefs.deviceId()).put("name", prefs.deviceName()));
             case "POST /pair": {
+                if (!Prefs.pairingOpen()) {
+                    return new HttpServer.Response(403, HttpServer.error("pairing_closed", "open PhoneDrop on the phone to pair"));
+                }
+                long wait = prefs.pairLockSeconds();
+                if (wait > 0) {
+                    return new HttpServer.Response(429, HttpServer.error("pairing_locked", "too many wrong PINs")
+                            .put("retryAfter", wait));
+                }
                 String token = prefs.pair(req.query.get("pin"), req.query.get("client"));
                 refresh();
                 if (token == null) return new HttpServer.Response(403, HttpServer.error("bad_pin", "wrong PIN"));

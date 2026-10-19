@@ -11,9 +11,11 @@ V síti se ohlašuje přes mDNS/DNS-SD jako `_phonedrop._tcp` s TXT `id=<UUID te
 | `PUT /upload?name=<název>` + `Content-Length` | Bearer | soubor: `{"ok":true,"kind":"file","path":"Download/Drop/x.pdf"}`<br>APK: `{"ok":true,"kind":"apk","session":42,"canInstall":true}` |
 | `GET /install?session=42` | Bearer | `{"ok":true,"state":"pending|confirm|installed|aborted|failed: …|unknown"}` |
 
-- **Párování:** telefon ukazuje 6místný PIN (v appce i v trvalém oznámení). Po úspěšném párování a po 5 chybných pokusech se PIN změní.
+- **Párování:** jen když je appka v telefonu otevřená (a 2 min po jejím opuštění), jinak 403 `pairing_closed`.
+  PIN je vidět jen v appce. Po úspěšném párování se PIN změní; po 5 chybných pokusech taky a párování se na minutu
+  zamkne (429 `pairing_locked` s `retryAfter` v sekundách).
   Telefon si ukládá jen SHA-256 tokenu, počítač token v `%APPDATA%\PhoneDrop\config.json`.
-- **Chyby:** `{"ok":false,"code":"…","error":"anglický text"}`, kódy `bad_pin`, `unpaired`, `no_space` (+ `needMb`, `freeMb`),
+- **Chyby:** `{"ok":false,"code":"…","error":"anglický text"}`, kódy `bad_pin`, `pairing_closed`, `pairing_locked`, `unpaired`, `no_space` (+ `needMb`, `freeMb`),
   `no_length`, `not_found`, `bad_request`, `failed`. Text do jazyka uživatele překládá klient podle `code`.
 - **Volné místo:** klient posílá `Expect: 100-continue`; telefon nejdřív ověří token a místo (APK počítá dvojnásobek)
   a buď odpoví `100 Continue`, nebo rovnou `507 {"code":"no_space",…}` – tělo se pak vůbec neposílá.

@@ -204,6 +204,7 @@ final class HttpServer {
             case 403: return "Forbidden";
             case 404: return "Not Found";
             case 411: return "Length Required";
+            case 429: return "Too Many Requests";
             case 507: return "Insufficient Storage";
             default: return "Error";
         }

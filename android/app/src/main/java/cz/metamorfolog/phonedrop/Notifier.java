@@ -12,6 +12,7 @@ import android.net.Uri;
 final class Notifier {
     static final int ID_SERVICE = 1;
     private static final int ID_PROGRESS = 2;
+    private static final int ID_UPDATE = 3;
     private static final String CH_SERVICE = "service";
     private static final String CH_FILES = "files";
     private static final String CH_INSTALL = "install";
@@ -31,12 +32,13 @@ final class Notifier {
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    static Notification service(Context ctx, String address, String pin) {
+    /** Trvalé oznámení služby – bez PINu: párovat jde jen v otevřené appce. */
+    static Notification service(Context ctx, String address) {
         return new Notification.Builder(ctx, CH_SERVICE)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setColor(ctx.getColor(R.color.accent))
                 .setContentTitle(ctx.getString(R.string.n_waiting))
-                .setContentText(address + " · PIN " + pin)
+                .setContentText(address)
                 .setContentIntent(openApp(ctx))
                 .setOngoing(true)
                 .setShowWhen(false)
@@ -91,6 +93,19 @@ final class Notifier {
                 .setAutoCancel(true)
                 .build();
         nm(ctx).notify(installId(session), n);
+    }
+
+    /** Nová verze appky – ťuknutí otevře PhoneDrop, kde je tlačítko Aktualizovat. */
+    static void updateAvailable(Context ctx, String version) {
+        Notification n = new Notification.Builder(ctx, CH_FILES)
+                .setSmallIcon(R.drawable.ic_stat)
+                .setColor(ctx.getColor(R.color.accent))
+                .setContentTitle(ctx.getString(R.string.n_update, version))
+                .setContentText(ctx.getString(R.string.n_update_text))
+                .setContentIntent(openApp(ctx))
+                .setAutoCancel(true)
+                .build();
+        nm(ctx).notify(ID_UPDATE, n);
     }
 
     static void installDone(Context ctx, int session, String title, String text) {

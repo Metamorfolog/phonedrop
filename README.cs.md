@@ -7,6 +7,8 @@ Náhrada za „adb install“ přes wireless debugging: **přetáhni soubor do o
 - `.apk` → telefon rovnou otevře systémovou instalaci (jedno ťuknutí na **Instalovat**; tichá instalace bez rootu/ADB nejde).
 - ostatní soubory → `Stažené/Drop` (Download/Drop), s oznámením, které soubor otevře.
 - Funguje v místní síti (Wi-Fi). Telefon se najde sám přes mDNS, i když se mu změní IP.
+- Obě aplikace se aktualizují samy z GitHub Releases (soubor se ověří podle `SHA256SUMS.txt`, Android navíc
+  přijme jen APK podepsané stejným klíčem).
 
 ```
 android/   přijímač pro Android (Java, bez knihoven, minSdk 29)
@@ -23,7 +25,9 @@ cd android
 JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew assembleRelease
 ```
 
-APK: `android/app/build/outputs/apk/release/app-release.apk`. `android/local.properties` (není v gitu) musí obsahovat
+APK: `android/app/build/outputs/apk/release/app-release.apk`. Release se podepisuje klíčem podle
+`android/keystore.properties` (není v gitu; `storeFile`, `storePassword`, `keyAlias`, `keyPassword`). Bez něj se
+použije ladicí klíč – jen pro testy, takové APK nesmí ven (aktualizace by se nenainstalovaly). `android/local.properties` (není v gitu) musí obsahovat
 cestu k Android SDK s dopřednými lomítky, např. `sdk.dir=C:/Android/sdk`.
 
 **Windows** (.NET 10 SDK):

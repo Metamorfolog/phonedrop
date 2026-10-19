@@ -9,7 +9,7 @@
     <string name="status_off">Off</string>
 
     <string name="hero_pin">Pairing PIN</string>
-    <string name="hero_hint">On Windows: PhoneDrop → ⋯ → Pair phone</string>
+    <string name="hero_hint">On Windows: PhoneDrop → ⋯ → Pair phone. Pairing only works while this screen is open.</string>
     <string name="hero_off_title">Receiving is off</string>
     <string name="hero_off_text">Your PC can\'t find this phone right now.</string>
     <string name="hero_turn_on">Turn on</string>
@@ -37,6 +37,18 @@
 
     <string name="section_pcs">Computers</string>
     <string name="section_look">Appearance</string>
+    <string name="section_update">Updates</string>
+    <string name="version_title">Version %1$s</string>
+    <string name="upd_idle">Tap to check for updates</string>
+    <string name="upd_checking">Checking…</string>
+    <string name="upd_latest">You\'re up to date</string>
+    <string name="upd_available">Version %1$s is available</string>
+    <string name="upd_downloading">Downloading… %1$d %%</string>
+    <string name="upd_installing">Confirm the install</string>
+    <string name="upd_failed">Couldn\'t check or download the update</string>
+    <string name="upd_button">Update</string>
+    <string name="n_update">PhoneDrop %1$s is available</string>
+    <string name="n_update_text">Tap to update</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>

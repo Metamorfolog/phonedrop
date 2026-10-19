@@ -97,8 +97,11 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         visible = true;
+        Prefs.pairingWindow(true);
         ReceiverService.onChange = () -> runOnUiThread(this::render);
+        Updater.onChange = () -> runOnUiThread(this::render);
         render();
+        Updater.check(this, false);
         // Instalace, kterou systém z pozadí nepustil – teď je appka v popředí, tak ji otevřeme.
         InstallResultReceiver.launchPending(this);
     }
@@ -106,7 +109,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         visible = false;
+        Prefs.pairingWindow(false);
         ReceiverService.onChange = null;
+        Updater.onChange = null;
         super.onPause();
     }
 
@@ -189,6 +194,31 @@ public class MainActivity extends Activity {
             divider(pcs);
             pcs.addView(unpair, new LinearLayout.LayoutParams(MATCH, WRAP));
         }
+
+        // Aktualizace.
+        section(getString(R.string.section_update), null);
+        LinearLayout upd = card();
+        Updater.State us = Updater.state;
+        String sub;
+        View trailing = null;
+        switch (us) {
+            case CHECKING: sub = getString(R.string.upd_checking); break;
+            case UP_TO_DATE: sub = getString(R.string.upd_latest); trailing = doneMark(); break;
+            case AVAILABLE:
+                sub = getString(R.string.upd_available, Updater.latest);
+                trailing = action(getString(R.string.upd_button), () -> Updater.install(this));
+                break;
+            case DOWNLOADING: sub = getString(R.string.upd_downloading, Updater.progress); break;
+            case INSTALLING: sub = getString(R.string.upd_installing); break;
+            case FAILED:
+                sub = getString(R.string.upd_failed);
+                if (Updater.latest != null) trailing = action(getString(R.string.upd_button), () -> Updater.install(this));
+                break;
+            default: sub = getString(R.string.upd_idle);
+        }
+        View updRow = item(upd, R.drawable.ic_update, R.color.accent, R.color.accentTint,
+                getString(R.string.version_title, Updater.current(this)), sub, trailing);
+        updRow.setOnClickListener(v -> Updater.check(this, true));
 
         // Vzhled.
         section(getString(R.string.section_look), null);

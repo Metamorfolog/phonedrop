@@ -36,7 +36,6 @@ public sealed class LanLink(string address, string token) : IPhoneLink
         using var cts = Short(ct);
         using var res = await Http.PostAsync(url, null, cts.Token);
         var json = await ReadJson(res, cts.Token);
-        if (res.StatusCode == HttpStatusCode.Forbidden) throw new PhoneException(L.WrongPin);
         Check(res, json);
         return (json.GetProperty("token").GetString()!, json.GetProperty("id").GetString()!, json.GetProperty("name").GetString()!);
     }
@@ -116,6 +115,9 @@ public sealed class LanLink(string address, string token) : IPhoneLink
             if (code == "no_space")
                 throw new PhoneException(L.NoSpace(json.GetProperty("needMb").GetInt64(), json.GetProperty("freeMb").GetInt64()));
             if (code == "bad_pin") throw new PhoneException(L.WrongPin);
+            if (code == "pairing_closed") throw new PhoneException(L.PairingClosed);
+            if (code == "pairing_locked")
+                throw new PhoneException(L.PairingLocked(json.TryGetProperty("retryAfter", out var ra) ? ra.GetInt64() : 60));
             if (code == "unpaired") throw new PhoneException(L.UnknownComputer);
             var msg = json.TryGetProperty("error", out var e) ? e.GetString() : null;
             throw new PhoneException(msg ?? L.PhoneError((int)res.StatusCode));

@@ -109,8 +109,26 @@ static class L
     public static string InstallFailed(string why) => Pick("Install failed: ", "Instalace selhala: ") + why;
     public static string InstallPending => Pick("Sent, the install is waiting for confirmation on the phone", "Odesláno, instalace čeká na potvrzení v telefonu");
 
+    // Aktualizace
+    public static string MenuCheckUpdates => Pick("Check for updates", "Zkontrolovat aktualizace");
+    public static string MenuUpdateTo(string v) => Pick($"Update to {v}", $"Aktualizovat na {v}");
+    public static string UpdateAvailable(string v) => Pick($"Version {v} is available", $"Je dostupná verze {v}");
+    public static string UpdateAvailableHint => Pick("⋯ → Update, or click the notification", "⋯ → Aktualizovat, nebo klikni na oznámení");
+    public static string UpdateBalloon => Pick("Click to update. PhoneDrop restarts on its own.", "Klikni pro aktualizaci. PhoneDrop se sám restartuje.");
+    public static string UpToDate(string v) => Pick($"You have the latest version ({v})", $"Máš nejnovější verzi ({v})");
+    public static string UpdateCheckFailed => Pick("Couldn't check for updates", "Aktualizace se nepodařilo ověřit");
+    public static string Updating => Pick("Downloading the update…", "Stahuji aktualizaci…");
+    public static string UpdatedTo(string v) => Pick($"Updated to {v}", $"Aktualizováno na {v}");
+    public static string UpdateNoChecksum => Pick("The release has no SHA256SUMS.txt, update skipped.", "Vydání nemá SHA256SUMS.txt, aktualizace přeskočena.");
+    public static string UpdateBadChecksum => Pick("The download doesn't match its checksum, update skipped.", "Stažený soubor nesedí s kontrolním součtem, aktualizace přeskočena.");
+    public static string UpdateFailed(string why) => Pick("Update failed: ", "Aktualizace selhala: ") + why;
+
     // Chyby od telefonu (kódy z PROTOCOL.md)
     public static string WrongPin => Pick("Wrong PIN.", "Špatný PIN.");
+    public static string PairingClosed => Pick("Open PhoneDrop on the phone – pairing only works while it's open.",
+        "Otevři v telefonu PhoneDrop – párovat jde, jen když je appka otevřená.");
+    public static string PairingLocked(long seconds) => Pick($"Too many wrong PINs. The phone shows a new one; try again in {seconds} s.",
+        $"Moc špatných PINů. Telefon ukazuje nový, zkus to znovu za {seconds} s.");
     public static string UnknownComputer => Pick("The phone doesn't know this PC – pair it again.", "Telefon tento počítač nezná – spáruj ho znovu.");
     public static string NoSpace(long need, long free) => Pick($"Not enough space on the phone: need {need} MB, {free} MB free",
         $"V telefonu není místo: potřeba {need} MB, volno {free} MB");
@@ -129,6 +147,7 @@ static class L
           PhoneDrop.exe --sendto on|off         adds/removes "Send to › Phone (PhoneDrop)"
           PhoneDrop.exe --lang auto|en|cs       sets the language
           PhoneDrop.exe --theme auto|light|dark sets the appearance
+          PhoneDrop.exe --update                checks for a new version and installs it
         """, """
         PhoneDrop – odeslání souborů do telefonu
 
@@ -140,6 +159,7 @@ static class L
           PhoneDrop.exe --sendto on|off         přidá/odebere „Odeslat do › Telefon (PhoneDrop)“
           PhoneDrop.exe --lang auto|en|cs       nastaví jazyk
           PhoneDrop.exe --theme auto|light|dark nastaví vzhled
+          PhoneDrop.exe --update                zkontroluje a nainstaluje novou verzi
         """);
     public static string CliError => Pick("Error: ", "Chyba: ");
     public static string CliNothing => Pick("Nothing found.", "Nic nenalezeno.");

@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application'
 }
 
+// Podpisový klíč pro vydání: cesta a hesla v android/keystore.properties (není v gitu, klíč leží mimo repo).
+// Bez něj se release podepíše ladicím klíčem – takové APK nejde vydávat, aktualizace by se nenainstalovaly.
+def keystoreProps = new Properties()
+def keystoreFile = rootProject.file('keystore.properties')
+if (keystoreFile.exists()) keystoreFile.withInputStream { keystoreProps.load(it) }
+
 android {
     namespace 'cz.metamorfolog.phonedrop'
     compileSdk 36
@@ -11,14 +17,38 @@ android {
         // MediaStore.Downloads + RELATIVE_PATH (Download/Drop) bez oprávnění k úložišti.
         minSdk 29
         targetSdk 36
-        versionCode 1
-        versionName '1.0'
+        // Verzi jde pro testy aktualizací přepsat: -PverCode=… -PverName=…
+        versionCode Integer.parseInt((project.findProperty('verCode') ?: '2').toString())
+        versionName((project.findProperty('verName') ?: '1.1.0').toString())
+        // Odkud se berou aktualizace (poslední vydání na GitHubu); pro testy -PupdateUrl=…
+        buildConfigField 'String', 'UPDATE_URL',
+                "\"${project.findProperty('updateUrl') ?: 'https://api.github.com/repos/Metamorfolog/phonedrop/releases/latest'}\""
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile.exists()) {
+                storeFile file(keystoreProps.getProperty('storeFile'))
+                storePassword keystoreProps.getProperty('storePassword')
+                keyAlias keystoreProps.getProperty('keyAlias')
+                keyPassword keystoreProps.getProperty('keyPassword')
+            }
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.debug
+            if (keystoreFile.exists()) {
+                signingConfig signingConfigs.release
+            } else {
+                logger.warn('keystore.properties chybí – release se podepíše ladicím klíčem (jen pro testy).')
+                signingConfig signingConfigs.debug
+            }
         }
     }
 

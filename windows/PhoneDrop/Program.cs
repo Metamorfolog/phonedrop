@@ -17,7 +17,18 @@ static class Program
         var startup = Config.Load();
         L.Init(startup.Language);
         Theme.Init(startup.Appearance);
+
+        // Spuštěno po aktualizaci: počkat, až stará verze skončí a uvolní jedinou instanci.
+        bool updated = false;
+        if (args.Length >= 2 && args[0] == "--after-update")
+        {
+            if (int.TryParse(args[1], out var pid))
+                try { System.Diagnostics.Process.GetProcessById(pid).WaitForExit(15000); } catch (ArgumentException) { }
+            args = [];
+            updated = true;
+        }
         if (args.Length > 0 && args[0].StartsWith("--")) return Cli.Run(args);
+        Updater.CleanUp();
 
         var files = args.Where(a => File.Exists(a) || Directory.Exists(a)).ToArray();
         using var mutex = new Mutex(true, InstanceName, out bool first);
@@ -40,7 +51,8 @@ static class Program
         do
         {
             Restart = false;
-            current = new MainForm(files);
+            current = new MainForm(files, updated);
+            updated = false;
             files = [];
             if (first && !listening) { listening = true; _ = ListenAsync(); }
             Application.Run(current);
