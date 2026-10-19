@@ -20,6 +20,8 @@ public sealed class MainForm : Form
 
     public MainForm(string[] initialFiles)
     {
+        // Jako z návrháře: rozvržení se postaví pro 96 DPI a ResumeLayout ho přepočítá na DPI monitoru.
+        SuspendLayout();
         sender = new Sender(config);
         sender.Status += (title, detail, progress) =>
             BeginInvoke(() => card!.Set(CardKind.Busy, title, detail, progress, queue.Count));
@@ -115,6 +117,8 @@ public sealed class MainForm : Form
             if (!config.IsPaired) Pair();
             Enqueue(initialFiles);
         };
+        ResumeLayout(false);
+        PerformLayout();
     }
 
     protected override void OnHandleCreated(EventArgs e)

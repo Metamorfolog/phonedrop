@@ -18,6 +18,7 @@ public sealed class PairForm : Form
 
     public PairForm()
     {
+        SuspendLayout();
         Text = L.PairTitle;
         Icon = MainForm.AppIcon;
         Font = Theme.UiFont(9.5f);
@@ -61,7 +62,6 @@ public sealed class PairForm : Form
         pin.Box.MaxLength = 7;
         pin.Box.PlaceholderText = "000 000";
         pin.Box.TextAlign = HorizontalAlignment.Center;
-        pin.Height = address.Height;
 
         info = new Label { Location = new Point(20, 330), AutoSize = true, MaximumSize = new Size(340, 0), ForeColor = Theme.Dim };
         empty = new Label
@@ -81,6 +81,8 @@ public sealed class PairForm : Form
             list.ItemHeight = (int)(52 * DeviceDpi / 96f);
             await DiscoverAsync();
         };
+        ResumeLayout(false);
+        PerformLayout();
     }
 
     protected override void OnHandleCreated(EventArgs e)

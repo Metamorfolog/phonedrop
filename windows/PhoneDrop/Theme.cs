@@ -162,13 +162,22 @@ sealed class InputBox : Panel
         SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
         Box.Font = Theme.UiFont(fontSize);
         Height = Box.PreferredHeight + 18;
-        Padding = new Padding(12, 9, 12, 0);
-        Box.Dock = DockStyle.Fill;
         Controls.Add(Box);
         Box.GotFocus += (_, _) => { focused = true; Invalidate(); };
         Box.LostFocus += (_, _) => { focused = false; Invalidate(); };
         Cursor = Cursors.IBeam;
         Click += (_, _) => Box.Focus();
+    }
+
+    /// <summary>Výška a okraje podle písma a DPI (automatické škálování by je přepočítalo dvakrát).</summary>
+    protected override void OnLayout(LayoutEventArgs e)
+    {
+        base.OnLayout(e);
+        float k = DeviceDpi / 96f;
+        int h = Box.PreferredHeight + (int)(18 * k);
+        if (Height != h) Height = h;
+        int pad = (int)(12 * k);
+        Box.SetBounds(pad, (Height - Box.PreferredHeight) / 2, Math.Max(10, Width - 2 * pad), Box.PreferredHeight);
     }
 
     protected override void OnPaint(PaintEventArgs e)
