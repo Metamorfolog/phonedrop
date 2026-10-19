@@ -16,6 +16,11 @@ public sealed class MainForm : Form
     readonly ToolStripMenuItem topItem;
     bool busy;
     bool exiting;
+    // Průběžné hlídání telefonu: okno ukáže, že je nedostupný, dřív než při odesílání.
+    readonly System.Windows.Forms.Timer watch = new() { Interval = 4000 };
+    bool checking;
+    bool? online;
+    DateTime lastCheck, lastDiscovery;
     bool hintShown;
 
     public MainForm(string[] initialFiles)
@@ -45,6 +50,8 @@ public sealed class MainForm : Form
             Location = new Point(Math.Max(wa.Left, wa.Right - Width - 24), Math.Max(wa.Top, wa.Bottom - Height - 24));
         };
         TopMost = config.TopMost;
+        // Jen ikona v oznamovací oblasti, žádné tlačítko na hlavním panelu (ani po otevření z ikony).
+        ShowInTaskbar = false;
 
         header = new PhoneHeader { Dock = DockStyle.Top, Height = 62 };
         zone = new DropZone { Dock = DockStyle.Fill };
@@ -112,10 +119,13 @@ public sealed class MainForm : Form
         RefreshPhone();
         if (config.IsPaired) card.Set(CardKind.Info, L.Ready, L.ReadyDetail);
         else card.Set(CardKind.Info, L.NotPairedTitle, L.NotPairedHint);
+        watch.Tick += async (_, _) => await CheckPhoneAsync();
         Shown += (_, _) =>
         {
             if (!config.IsPaired) Pair();
             Enqueue(initialFiles);
+            watch.Start();
+            _ = CheckPhoneAsync(force: true);
         };
         ResumeLayout(false);
         PerformLayout();
@@ -137,8 +147,8 @@ public sealed class MainForm : Form
 
     void RefreshPhone()
     {
-        if (config.IsPaired) header.Set(config.DeviceName ?? L.Phone, config.Address!, true);
-        else header.Set(L.NoPhone, L.Unpaired, false);
+        if (config.IsPaired) header.Set(config.DeviceName ?? L.Phone, online == false ? L.Unreachable(config.Address!) : config.Address!, online);
+        else header.Set(L.NoPhone, L.Unpaired, null);
     }
 
     void PickFiles()
@@ -169,7 +179,7 @@ public sealed class MainForm : Form
             if (!config.IsPaired) { Pair(); if (!config.IsPaired) { queue.Clear(); return; } }
             card.Set(CardKind.Busy, config.DeviceName ?? L.Phone, L.Connecting, null, queue.Count);
             var link = await sender.ConnectAsync(CancellationToken.None);
-            RefreshPhone();
+            SetOnline(true);
             while (queue.Count > 0)
             {
                 var file = queue.Dequeue();
@@ -191,7 +201,7 @@ public sealed class MainForm : Form
             queue.Clear();
             results.Add(new Outcome(false, config.DeviceName ?? L.Phone, e is PhoneException ? e.Message : L.NotResponding(e.Message)));
             card.Set(CardKind.Error, results[^1].Title, results[^1].Detail);
-            header.Set(config.DeviceName ?? L.Phone, L.Unreachable(config.Address!), false);
+            SetOnline(false);
         }
         finally
         {
@@ -217,6 +227,7 @@ public sealed class MainForm : Form
         config.DeviceId = dlg.DeviceId;
         config.DeviceName = dlg.DeviceName;
         config.Save();
+        online = true;
         RefreshPhone();
         card.Set(CardKind.Ok, L.PairedWith(config.DeviceName!), L.DropHere);
     }
@@ -277,13 +288,99 @@ public sealed class MainForm : Form
         Show();
         if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
         Activate();
+        _ = CheckPhoneAsync(force: true);
     }
+
+    /// <summary>
+    /// Ověří, jestli telefon přijímá (každé 4 s s otevřeným oknem, každých 30 s v oznamovací oblasti).
+    /// Když neodpovídá, jednou za 30 s ho zkusí dohledat přes mDNS (mohl dostat novou IP).
+    /// </summary>
+    async Task CheckPhoneAsync(bool force = false)
+    {
+        if (checking || busy || !config.IsPaired) return;
+        var interval = TimeSpan.FromSeconds(Visible ? 4 : 30);
+        if (!force && DateTime.UtcNow - lastCheck < interval - TimeSpan.FromMilliseconds(500)) return;
+        checking = true;
+        lastCheck = DateTime.UtcNow;
+        try
+        {
+            bool ok = await PingAsync(config.Address!);
+            if (!ok && DateTime.UtcNow - lastDiscovery > TimeSpan.FromSeconds(30))
+            {
+                lastDiscovery = DateTime.UtcNow;
+                var found = (await Mdns.DiscoverAsync(timeoutMs: 1500)).FirstOrDefault(p => p.Id == config.DeviceId);
+                if (found != null && found.Address != config.Address && await PingAsync(found.Address))
+                {
+                    config.Address = found.Address;
+                    config.Save();
+                    ok = true;
+                }
+            }
+            if (!busy) SetOnline(ok);
+        }
+        catch (PhoneException e)
+        {
+            // Telefon odpovídá, ale tenhle počítač nezná (zrušené párování).
+            if (busy) return;
+            SetOnline(false);
+            if (CardReplaceable()) card.Set(CardKind.Error, config.DeviceName ?? L.Phone, e.Message);
+        }
+        finally
+        {
+            checking = false;
+        }
+    }
+
+    async Task<bool> PingAsync(string address)
+    {
+        try
+        {
+            await new LanLink(address, config.Token!).PingAsync(CancellationToken.None);
+            return true;
+        }
+        catch (Exception e) when (Sender.IsUnreachable(e, CancellationToken.None))
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Hlavička, ikona u hodin a (když karta nic důležitého neukazuje) stavová karta.</summary>
+    void SetOnline(bool on)
+    {
+        bool? was = online;
+        online = on;
+        RefreshPhone();
+        var name = config.DeviceName ?? L.Phone;
+        tray.Text = Clip(on ? "PhoneDrop · " + name : L.TrayOffline(name));
+        if (busy || was == on) return;
+        if (!on && CardReplaceable())
+            card.Set(CardKind.Info, L.PhoneOfflineTitle, L.PhoneOfflineHint);
+        else if (on && was == false && (card.Title == L.PhoneOfflineTitle || (card.Kind == CardKind.Error && card.Title == name)))
+            card.Set(CardKind.Ok, L.PhoneBack, L.ReadyDetail);
+    }
+
+    /// <summary>Kartu smí přepsat stav telefonu, jen když neukazuje výsledek přenosu.</summary>
+    bool CardReplaceable() =>
+        card.Kind == CardKind.Info || (card.Kind == CardKind.Error && card.Title == (config.DeviceName ?? L.Phone));
+
+    static string Clip(string s) => s.Length <= 63 ? s : s[..62] + "…";
 
     void Quit()
     {
         exiting = true;
         tray.Visible = false;
         Close();
+    }
+
+    /// <summary>Minimalizace bez tlačítka na hlavním panelu = schovat k ikoně u hodin.</summary>
+    protected override void OnResize(EventArgs e)
+    {
+        base.OnResize(e);
+        if (WindowState == FormWindowState.Minimized)
+        {
+            Hide();
+            WindowState = FormWindowState.Normal;
+        }
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)
@@ -301,6 +398,7 @@ public sealed class MainForm : Form
             return;
         }
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnSystemPreferences;
+        watch.Dispose();
         tray.Dispose();
         base.OnFormClosing(e);
     }

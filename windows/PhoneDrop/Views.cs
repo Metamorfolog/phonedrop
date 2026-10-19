@@ -58,9 +58,10 @@ abstract class PaintedControl : Control
 sealed class PhoneHeader : PaintedControl
 {
     string name = "", detail = "";
-    bool connected;
+    bool? connected;
 
-    public void Set(string name, string detail, bool connected)
+    /// <summary>connected: true = dostupný (zelená), false = nedostupný (červená), null = neověřeno (šedá).</summary>
+    public void Set(string name, string detail, bool? connected)
     {
         (this.name, this.detail, this.connected) = (name, detail, connected);
         Invalidate();
@@ -76,13 +77,13 @@ sealed class PhoneHeader : PaintedControl
         using (var fill = new SolidBrush(Theme.Surface))
             g.FillPath(fill, path);
         DrawPhone(g, new RectangleF(tile.X + s * 0.33f, tile.Y + s * 0.2f, s * 0.34f, s * 0.6f),
-            connected ? Theme.Accent : Theme.Dim, 1.8f);
+            connected == true ? Theme.Accent : Theme.Dim, 1.8f);
 
         float x = tile.Right + 12;
         using var title = Px(10.5f, true);
         using var small = Px(8.75f);
         DrawText(g, name, title, new RectangleF(x, 9, W - x - 52, 24), Theme.Fore, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
-        using (var dot = new SolidBrush(connected ? Theme.Accent : Theme.Dim))
+        using (var dot = new SolidBrush(connected switch { true => Theme.Accent, false => Theme.Bad, _ => Theme.Dim }))
             g.FillEllipse(dot, x + 1, 37, 7, 7);
         DrawText(g, detail, small, new RectangleF(x + 13, 32, W - x - 62, 18), Theme.Dim, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
     }
@@ -197,6 +198,9 @@ sealed class StatusCard : PaintedControl
     {
         spin.Tick += (_, _) => { angle = (angle + 7) % 360; Invalidate(); };
     }
+
+    public CardKind Kind => kind;
+    public string Title => title;
 
     public void Set(CardKind kind, string title, string detail, double? progress = null, int queued = 0)
     {

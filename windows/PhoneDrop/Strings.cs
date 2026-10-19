@@ -32,6 +32,10 @@ static class L
     public static string NoPhone => Pick("No phone", "Žádný telefon");
     public static string Unpaired => Pick("Not paired", "Nespárováno");
     public static string Phone => Pick("Phone", "Telefon");
+    public static string PhoneOfflineTitle => Pick("The phone isn't receiving", "Telefon teď nepřijímá");
+    public static string PhoneOfflineHint => Pick("Open PhoneDrop on it and turn on Receive files", "Otevři v něm PhoneDrop a zapni Přijímat soubory");
+    public static string PhoneBack => Pick("The phone is back", "Telefon je zase připojený");
+    public static string TrayOffline(string name) => Pick($"PhoneDrop · {name} unreachable", $"PhoneDrop · {name} nedostupný");
     public static string Connecting => Pick("Connecting…", "Připojuji…");
     public static string Unreachable(string addr) => Pick("Unreachable · ", "Nedostupný · ") + addr;
     public static string NotResponding(string msg) => Pick("Not responding: ", "Neodpovídá: ") + msg;
@@ -93,8 +97,8 @@ static class L
     // Přenos
     public static string NotPaired => Pick("No phone is paired.", "Telefon není spárovaný.");
     public static string SearchingNetwork => Pick("Searching the network…", "Hledám v síti…");
-    public static string PhoneNotFound(string addr) => Pick($"Phone not found ({addr}). Is PhoneDrop running and are you on the same network?",
-        $"Telefon nenalezen ({addr}). Běží v něm PhoneDrop a jste ve stejné síti?");
+    public static string PhoneNotFound(string addr) => Pick("Not found on the network. Is receiving turned on?",
+        "Nenalezen v síti. Je v něm zapnutý příjem?");
     public static string Progress(string done, string total, string speed) => Pick($"{done} of {total}{speed}", $"{done} z {total}{speed}");
     public static string SavedTo(string path) => Pick("Saved to ", "Uloženo do ") + path;
     public static string ConfirmInstall => Pick("Confirm the install on the phone…", "Potvrď instalaci v telefonu…");
