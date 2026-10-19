@@ -27,7 +27,22 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- QR kód z počítače je odkaz na web; foťák ho otevře rovnou v PhoneDropu (assetlinks.json na webu). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="phonedrop.apexpiksel.cz"
+                    android:pathPrefix="/pair" />
+            </intent-filter>
         </activity>
+
+        <!-- Skener QR kódu (Play služby) se stáhne rovnou s appkou, ne až při prvním skenování. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode_ui" />
 
         <!-- Sdílet → PhoneDrop: soubory do počítače (uloží se tam do Stažených). -->
         <activity

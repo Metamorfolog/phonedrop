@@ -106,6 +106,7 @@ static class Program
             f.Show();
             for (int i = 0; i < 10; i++) { Application.DoEvents(); Thread.Sleep(20); }
             if (f is FeedbackForm fb && !fb.AddWindowShot()) return 2;
+            if (f is MainForm qrMain && f != owner) qrMain.ShowQrForTest();
             for (int i = 0; i < 5; i++) { Application.DoEvents(); Thread.Sleep(20); }
             using var bmp = new Bitmap(f.Width, f.Height);
             f.DrawToBitmap(bmp, new Rectangle(Point.Empty, f.Size));

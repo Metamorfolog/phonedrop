@@ -97,6 +97,113 @@ public class MainActivity extends Activity {
 
         if (!notificationsAllowed()) requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
         if (prefs.enabled()) ReceiverService.start(this);
+        handlePairLink(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handlePairLink(intent);
+    }
+
+    // ---- párování QR kódem ----
+
+    /** Odkaz z QR kódu (naskenovaný foťákem nebo skenerem v appce). */
+    private void handlePairLink(Intent intent) {
+        if (intent == null || !Intent.ACTION_VIEW.equals(intent.getAction()) || intent.getData() == null) return;
+        android.net.Uri uri = intent.getData();
+        intent.setData(null); // po otočení obrazovky se nemá ptát znovu
+        confirmPairing(uri);
+    }
+
+    private void scanQr() {
+        com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions options =
+                new com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions.Builder()
+                        .setBarcodeFormats(com.google.mlkit.vision.barcode.common.Barcode.FORMAT_QR_CODE)
+                        .enableAutoZoom()
+                        .build();
+        com.google.mlkit.vision.codescanner.GmsBarcodeScanning.getClient(this, options).startScan()
+                .addOnSuccessListener(code -> {
+                    String raw = code.getRawValue();
+                    if (raw != null) confirmPairing(android.net.Uri.parse(raw));
+                })
+                .addOnFailureListener(e -> new android.app.AlertDialog.Builder(this)
+                        .setTitle(R.string.qr_no_scanner_title)
+                        .setMessage(R.string.qr_no_scanner_text)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show());
+    }
+
+    /** Ověří odkaz, zeptá se a pak počká, až si počítač žádost vyzvedne. */
+    private void confirmPairing(android.net.Uri uri) {
+        String frag = uri.getFragment();
+        boolean ours = "https".equals(uri.getScheme()) && "phonedrop.apexpiksel.cz".equals(uri.getHost())
+                && uri.getPath() != null && uri.getPath().startsWith("/pair") && frag != null;
+        String[] parts = ours ? frag.split("\\.") : new String[0];
+        byte[] key = null;
+        if (parts.length == 3 && "1".equals(parts[0]) && parts[1].matches("[A-Za-z0-9_-]{22}") && parts[2].matches("[A-Za-z0-9_-]{43}")) {
+            try {
+                key = android.util.Base64.decode(parts[2], android.util.Base64.URL_SAFE | android.util.Base64.NO_PADDING | android.util.Base64.NO_WRAP);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        if (key == null || key.length != 32) {
+            android.widget.Toast.makeText(this, R.string.qr_not_ours, android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        String id = parts[1];
+        byte[] k = key;
+        new android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.qr_confirm_title)
+                .setMessage(R.string.qr_confirm_text)
+                .setPositiveButton(R.string.qr_pair, (d, w) -> waitForComputer(id, k))
+                .setNegativeButton(R.string.fb_cancel, null)
+                .show();
+    }
+
+    private void waitForComputer(String id, byte[] key) {
+        Prefs.startClaim(id, key);
+        long started = android.os.SystemClock.elapsedRealtime();
+        if (!prefs.enabled()) setEnabled(true); // bez přijímače se počítač nemá jak ozvat
+        ReceiverService.start(this);
+        LinearLayout box = column();
+        box.setPadding(px(24), px(8), px(24), 0);
+        box.setGravity(Gravity.CENTER_HORIZONTAL);
+        android.widget.ProgressBar spin = new android.widget.ProgressBar(this);
+        spin.setIndeterminateTintList(ColorStateList.valueOf(color(R.color.accent)));
+        box.addView(spin, new LinearLayout.LayoutParams(px(44), px(44)));
+        TextView text = label(getString(R.string.qr_waiting_text), 14, R.color.dim, null);
+        text.setGravity(Gravity.CENTER);
+        text.setPadding(0, px(12), 0, 0);
+        box.addView(text);
+        android.app.AlertDialog dlg = new android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.qr_waiting)
+                .setView(box)
+                .setNegativeButton(R.string.fb_cancel, (d, w) -> Prefs.cancelClaim())
+                .setOnCancelListener(d -> Prefs.cancelClaim())
+                .show();
+        android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
+        h.post(new Runnable() {
+            @Override public void run() {
+                if (!dlg.isShowing()) return;
+                if (Prefs.lastClaimedAt > started) {
+                    dlg.dismiss();
+                    android.widget.Toast.makeText(MainActivity.this, getString(R.string.qr_paired, Prefs.lastClaimedName),
+                            android.widget.Toast.LENGTH_LONG).show();
+                    render();
+                } else if (!Prefs.claimPending()) {
+                    dlg.dismiss();
+                    new android.app.AlertDialog.Builder(MainActivity.this)
+                            .setTitle(R.string.qr_timeout_title)
+                            .setMessage(R.string.qr_timeout_text)
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show();
+                } else {
+                    h.postDelayed(this, 400);
+                }
+            }
+        });
     }
 
     @Override
@@ -377,6 +484,23 @@ public class MainActivity extends Activity {
         hero.addView(pin);
 
         hero.addView(white(label(getString(R.string.hero_hint), 14, 0, null), 0.88f));
+
+        // Hlavní cesta: naskenovat QR kód z okna PhoneDropu ve Windows.
+        LinearLayout scan = row();
+        scan.setGravity(Gravity.CENTER_VERTICAL);
+        scan.setPadding(px(16), px(10), px(20), px(10));
+        scan.setBackground(new RippleDrawable(ColorStateList.valueOf(0x22000000), roundedRaw(0xFFFFFFFF, 50), null));
+        ImageView qrIcon = new ImageView(this);
+        qrIcon.setImageResource(R.drawable.ic_qr);
+        qrIcon.setImageTintList(ColorStateList.valueOf(color(R.color.heroEnd)));
+        scan.addView(qrIcon, new LinearLayout.LayoutParams(px(20), px(20)));
+        TextView scanText = label(getString(R.string.qr_scan), 15, R.color.heroEnd, MEDIUM);
+        scanText.setPadding(px(8), 0, 0, 0);
+        scan.addView(scanText);
+        scan.setOnClickListener(v -> scanQr());
+        LinearLayout.LayoutParams scanLp = new LinearLayout.LayoutParams(WRAP, WRAP);
+        scanLp.topMargin = px(16);
+        hero.addView(scan, scanLp);
     }
 
     private void section(String title, String trailing) {

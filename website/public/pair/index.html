@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pair PhoneDrop</title>
+  <meta name="description" content="This QR code pairs your phone with PhoneDrop on your PC. Get the Android app and scan it there.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f2f5f1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1311" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <link rel="stylesheet" href="../style.css">
+  <script src="../main.js" defer></script>
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="../" aria-label="PhoneDrop">
+      <img src="../assets/icon.png" alt="" width="32" height="32">
+      <span>PhoneDrop</span>
+    </a>
+    <div class="nav-end">
+      <button class="lang" type="button" id="lang-toggle" aria-label="Switch language / Přepnout jazyk">
+        <span data-l="en">CZ</span><span data-l="cs">EN</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- Odkaz z QR kódu v okně PhoneDropu ve Windows. S nainstalovanou appkou ho Android otevře rovnou v ní
+         (assetlinks.json); tahle stránka je pro telefon, který PhoneDrop ještě nemá. Tajný klíč je za #
+         a na server se nikdy neposílá. -->
+    <section class="section">
+      <div class="feedback pair-card">
+        <h2><span data-l="en">Almost there</span><span data-l="cs">Skoro hotovo</span></h2>
+        <p class="section-lead">
+          <span data-l="en">This QR code pairs your phone with PhoneDrop on your PC. Your phone doesn't have the PhoneDrop app yet.</span>
+          <span data-l="cs">Tenhle QR kód páruje telefon s PhoneDropem na počítači. V telefonu ale ještě není aplikace PhoneDrop.</span>
+        </p>
+        <ol class="pair-steps">
+          <li>
+            <span data-l="en">Install PhoneDrop for Android:</span><span data-l="cs">Nainstaluj PhoneDrop pro Android:</span>
+            <a class="btn btn-primary js-dl-apk" href="https://github.com/Metamorfolog/phonedrop/releases/latest"><span data-l="en">Download the app</span><span data-l="cs">Stáhnout aplikaci</span></a>
+          </li>
+          <li><span data-l="en">Open it and tap <b>Scan QR code</b>.</span><span data-l="cs">Otevři ji a klepni na <b>Naskenovat QR kód</b>.</span></li>
+          <li><span data-l="en">Scan the code on your PC again. Done.</span><span data-l="cs">Naskenuj kód na počítači znovu. Hotovo.</span></li>
+        </ol>
+        <p class="small">
+          <span data-l="en">The code holds a one-time key for pairing. It stays on your phone: this page never sends it anywhere.</span>
+          <span data-l="cs">Kód obsahuje jednorázový klíč k párování. Zůstává v telefonu, tahle stránka ho nikam neposílá.</span>
+        </p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

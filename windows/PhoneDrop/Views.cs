@@ -118,6 +118,15 @@ sealed class DropZone : PaintedControl
     readonly System.Windows.Forms.Timer anim = new() { Interval = 16 };
     float t, glow;
     bool hot, hover;
+    bool[,]? qr;
+
+    /// <summary>QR kód k párování; null = běžná drop zóna.</summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public bool[,]? Qr
+    {
+        get => qr;
+        set { qr = value; Invalidate(); }
+    }
 
     public DropZone()
     {
@@ -157,6 +166,11 @@ sealed class DropZone : PaintedControl
             g.FillPath(fill, path);
         using (var pen = new Pen(Theme.Mix(Theme.Line, Theme.Accent, glow), 1.6f) { DashPattern = [5f, 4f] })
             g.DrawPath(pen, path);
+        if (qr != null)
+        {
+            PaintQr(g, qr);
+            return;
+        }
 
         // Ilustrace: kruh, v něm šipka dolů nad „miskou“.
         float cx = W / 2f, cy = H / 2f - 34;
@@ -179,6 +193,37 @@ sealed class DropZone : PaintedControl
             TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
         DrawText(g, L.DropClick, small, new RectangleF(10, ty + 28, W - 20, 18), Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
         DrawText(g, L.DropApk, small, new RectangleF(10, ty + 46, W - 20, 18), Theme.Dim, TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
+    }
+
+    /// <summary>QR vlevo (vždy tmavý na bílém – tak ho čtou všechny foťáky), vpravo krátký návod.</summary>
+    void PaintQr(Graphics g, bool[,] m)
+    {
+        int n = m.GetLength(0), quiet = 3;
+        float side = Math.Min(H - 28, W * 0.5f);
+        // Moduly na celé fyzické pixely, ať je kód ostrý.
+        int mod = Math.Max(1, (int)(side * K / (n + quiet * 2)));
+        int box = mod * (n + quiet * 2);
+        int x0 = (int)(18 * K), y0 = (int)((H * K - box) / 2);
+        var state = g.Save();
+        g.ResetTransform();
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (var white = new SolidBrush(Color.White))
+        using (var rounded = Theme.Rounded(new RectangleF(x0, y0, box, box), 10 * K))
+            g.FillPath(white, rounded);
+        g.SmoothingMode = SmoothingMode.None;
+        using (var dark = new SolidBrush(Color.FromArgb(18, 22, 20)))
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                    if (m[y, x]) g.FillRectangle(dark, x0 + (x + quiet) * mod, y0 + (y + quiet) * mod, mod, mod);
+        g.Restore(state);
+
+        float tx = (x0 + box) / K + 16, tw = W - tx - 10, cy = H / 2f;
+        using var big = Px(12f, true);
+        using var small = Px(8.75f);
+        DrawText(g, L.QrTitle, big, new RectangleF(tx, cy - 52, tw, 24), Theme.Fore, TextFormatFlags.WordEllipsis);
+        DrawText(g, L.QrApp, small, new RectangleF(tx, cy - 22, tw, 36), Theme.Dim, TextFormatFlags.WordBreak);
+        DrawText(g, L.QrCamera, small, new RectangleF(tx, cy + 12, tw, 18), Theme.Dim, TextFormatFlags.WordEllipsis);
+        DrawText(g, L.QrPin, small, new RectangleF(tx, cy + 36, tw, 36), Theme.Accent, TextFormatFlags.WordBreak);
     }
 }
 

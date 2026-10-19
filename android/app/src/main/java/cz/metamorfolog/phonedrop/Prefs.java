@@ -86,6 +86,67 @@ final class Prefs {
         return pin;
     }
 
+    // ---- párování QR kódem ----
+    // Telefon naskenoval kód z počítače a 2 minuty čeká, až si počítač žádost vyzvedne (POST /pair/claim).
+    private static final long CLAIM_MS = 2 * 60 * 1000;
+    private static volatile String claimId;
+    private static volatile byte[] claimKey;
+    private static volatile long claimUntil;
+    /** Poslední párování QR kódem (pro appku: zavřít čekání a ukázat, s kým). */
+    static volatile String lastClaimedName;
+    static volatile long lastClaimedAt;
+
+    static void startClaim(String id, byte[] key) {
+        claimId = id;
+        claimKey = key;
+        claimUntil = SystemClock.elapsedRealtime() + CLAIM_MS;
+    }
+
+    static void cancelClaim() {
+        claimId = null;
+        claimKey = null;
+    }
+
+    static boolean claimPending() {
+        return claimId != null && SystemClock.elapsedRealtime() < claimUntil;
+    }
+
+    /**
+     * Počítač vyzvedává žádost: zná ID a dokazuje znalost klíče (HMAC), aniž by klíč poslal po síti.
+     * Vrací nový token, nebo null (žádná taková žádost, prošlá nebo špatný důkaz).
+     */
+    synchronized String claim(String id, String proofHex, String client) {
+        String expected = claimId;
+        byte[] key = claimKey;
+        if (expected == null || key == null || id == null || proofHex == null || !claimPending()) return null;
+        if (!MessageDigest.isEqual(utf8(id), utf8(expected))) return null;
+        try {
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            mac.init(new javax.crypto.spec.SecretKeySpec(key, "HmacSHA256"));
+            String proof = hex(mac.doFinal(utf8("phonedrop-pair:" + id)));
+            if (!MessageDigest.isEqual(utf8(proof), utf8(proofHex.toLowerCase(Locale.ROOT)))) return null;
+        } catch (Exception e) {
+            return null;
+        }
+        cancelClaim();
+        String token = issueToken(client);
+        // Klíč pro šifrovaný přenos (relay) v dalších verzích – jen u párování QR kódem.
+        sp.edit().putString("key_" + sha256(token), android.util.Base64.encodeToString(key, android.util.Base64.NO_WRAP)).apply();
+        lastClaimedName = clean(client);
+        lastClaimedAt = SystemClock.elapsedRealtime();
+        return token;
+    }
+
+    private String issueToken(String client) {
+        byte[] raw = new byte[32];
+        RANDOM.nextBytes(raw);
+        String token = hex(raw);
+        Set<String> tokens = new HashSet<>(sp.getStringSet("tokens", new HashSet<>()));
+        tokens.add(sha256(token) + "|" + clean(client));
+        sp.edit().putStringSet("tokens", tokens).apply();
+        return token;
+    }
+
     /** Ověří PIN; při úspěchu vydá nový token a PIN se změní. Po 5 chybách se PIN také změní. */
     synchronized String pair(String pin, String client) {
         if (pin == null || !MessageDigest.isEqual(utf8(pin), utf8(pin()))) {
@@ -99,12 +160,7 @@ final class Prefs {
             }
             return null;
         }
-        byte[] raw = new byte[32];
-        RANDOM.nextBytes(raw);
-        String token = hex(raw);
-        Set<String> tokens = new HashSet<>(sp.getStringSet("tokens", new HashSet<>()));
-        tokens.add(sha256(token) + "|" + clean(client));
-        sp.edit().putStringSet("tokens", tokens).apply();
+        String token = issueToken(client);
         newPin();
         return token;
     }

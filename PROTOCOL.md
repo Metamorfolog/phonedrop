@@ -7,6 +7,7 @@ V síti se ohlašuje přes mDNS/DNS-SD jako `_phonedrop._tcp` s TXT `id=<UUID te
 |---|---|---|
 | `GET /info` | – | `{"ok":true,"app":"PhoneDrop","v":1,"id":"…","name":"Pixel 8"}` |
 | `POST /pair?pin=123456&client=PC` | – | `{"ok":true,"token":"…","id":"…","name":"…"}` nebo 403 |
+| `POST /pair/claim?c=…&proof=…&client=PC` | – | totéž; 404 `no_claim`, když o žádosti telefon neví |
 | `GET /ping` | Bearer | `{"ok":true,"id":"…","name":"…"}` nebo 401 |
 | `PUT /upload?name=<název>[&dir=<podsložka>]` + `Content-Length` | Bearer | soubor: `{"ok":true,"kind":"file","path":"Download/Drop/x.pdf"}`<br>APK: `{"ok":true,"kind":"apk","session":42,"canInstall":true}` |
 | `GET /install?session=42` | Bearer | `{"ok":true,"state":"pending|confirm|installed|aborted|failed: …|unknown"}` |
@@ -14,7 +15,15 @@ V síti se ohlašuje přes mDNS/DNS-SD jako `_phonedrop._tcp` s TXT `id=<UUID te
 | `GET /outbox/file?id=…` | Bearer | tělo souboru (`application/octet-stream`, `Content-Length`) |
 | `POST /outbox/done?id=…` | Bearer | `{"ok":true}` – telefon soubor smaže z fronty |
 
-- **Párování:** jen když je appka v telefonu otevřená (a 2 min po jejím opuštění), jinak 403 `pairing_closed`.
+- **Párování QR kódem** (výchozí): počítač ukáže v drop zóně QR s odkazem
+  `https://phonedrop.apexpiksel.cz/pair#1.<c>.<k>` – `c` je 16 náhodných bajtů (ID žádosti), `k` 32 bajtů klíče,
+  obojí base64url. Telefon odkaz otevře (skener v appce nebo foťák přes Android App Links, `/.well-known/assetlinks.json`
+  na webu), uživatel potvrdí a telefon si žádost 2 minuty pamatuje. Počítač mezitím každé 1,5 s obchází telefony
+  nalezené přes mDNS a posílá `POST /pair/claim` s `proof` = hex HMAC-SHA256(k, `"phonedrop-pair:" + c`). Klíč `k` tedy
+  nikdy nejde po síti; obě strany si ho uloží (`Key` v config.json, `key_<hash tokenu>` v telefonu) pro šifrovaný
+  přenos přes relay v dalších verzích. Žádost jde vyzvednout jen jednou. Za `#` je klíč i na webu: prohlížeč ho
+  serveru neposílá.
+- **Párování PINem** (záloha, klik na QR kód): jen když je appka v telefonu otevřená (a 2 min po jejím opuštění), jinak 403 `pairing_closed`.
   PIN je vidět jen v appce. Po úspěšném párování se PIN změní; po 5 chybných pokusech taky a párování se na minutu
   zamkne (429 `pairing_locked` s `retryAfter` v sekundách).
   Telefon si ukládá jen SHA-256 tokenu, počítač token v `%APPDATA%\PhoneDrop\config.json`.

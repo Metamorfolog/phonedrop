@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "cz.metamorfolog.phonedrop",
+      "sha256_cert_fingerprints": [
+        "E4:10:E1:61:8F:7C:96:8D:41:94:BF:BC:A5:3A:37:F6:8E:76:4B:28:4C:A7:C1:CC:4A:2E:2F:AC:E4:FE:9B:43"
+      ]
+    }
+  }
+]

@@ -57,7 +57,8 @@ značky `vX.Y.Z`: obě exe, APK podepsané klíčem z tajemství repozitáře (`
 1. **Telefon:** nainstaluj APK (jednou přes kabel/adb nebo stažením), otevři PhoneDrop, povol oznámení.
    Ukáže adresu a **PIN**. Klepni na *Povolit instalaci aplikací* a *Vypnout optimalizaci baterie*
    (jinak telefon se zhasnutým displejem v Doze přestane přijímat).
-2. **Windows:** spusť `PhoneDrop.exe`. Otevře se párování – vyber telefon ze seznamu (nebo opiš adresu) a zadej PIN.
+2. **Windows:** spusť `PhoneDrop.exe`. V boxu na soubory je **QR kód** – v telefonu klepni na *Naskenovat QR kód*
+   (nebo na něj namiř foťák) a potvrď. Kliknutím na QR kód jde místo toho spárovat PINem.
 3. Přetáhni soubor do okénka. Křížek okno jen schová do oznamovací oblasti; konec přes ⋯ → Ukončit.
 4. Volitelně ⋯ → *V Průzkumníku: Odeslat do › Telefon* – pak pravé tlačítko na soubor → **Odeslat do › Telefon (PhoneDrop)**
    (ve Windows 11 pod „Zobrazit další možnosti“). Když už okno běží, soubory se předají jemu.

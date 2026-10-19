@@ -9,7 +9,19 @@
     <string name="status_off">Off</string>
 
     <string name="hero_pin">Pairing PIN</string>
-    <string name="hero_hint">On Windows: PhoneDrop → ⋯ → Pair phone. Pairing only works while this screen is open.</string>
+    <string name="hero_hint">Scan the QR code in the PhoneDrop window on your PC. Or click the code there and type this PIN. Pairing only works while this screen is open.</string>
+    <string name="qr_scan">Scan QR code</string>
+    <string name="qr_confirm_title">Pair with this PC?</string>
+    <string name="qr_confirm_text">This phone will be paired with the PC showing the QR code. That PC can then send files and offer APKs to install.</string>
+    <string name="qr_pair">Pair</string>
+    <string name="qr_waiting">Waiting for the PC…</string>
+    <string name="qr_waiting_text">The PC with PhoneDrop open picks this up within a few seconds. Both need to be on the same Wi-Fi.</string>
+    <string name="qr_paired">Paired with %1$s</string>
+    <string name="qr_timeout_title">The PC didn\'t answer</string>
+    <string name="qr_timeout_text">Is PhoneDrop open on the PC, and are both on the same Wi-Fi? Try scanning again, or pair with the PIN.</string>
+    <string name="qr_not_ours">That isn\'t a PhoneDrop QR code.</string>
+    <string name="qr_no_scanner_title">Scanner not available</string>
+    <string name="qr_no_scanner_text">Scan the QR code with your phone\'s camera instead. It opens PhoneDrop by itself.</string>
     <string name="hero_off_title">Receiving is off</string>
     <string name="hero_off_text">Your PC can\'t find this phone right now.</string>
     <string name="hero_turn_on">Turn on</string>

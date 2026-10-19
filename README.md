@@ -32,10 +32,12 @@ PROTOCOL.md  the HTTP protocol between the two (in Czech)
 
 1. **Phone:** install `PhoneDrop.apk`, open it and allow notifications. It shows its address and a **PIN**.
    Tap *Allow* next to *Install apps* and *Run in background* (otherwise the phone stops receiving when idle).
-   Pairing only works while that screen is open; after five wrong PINs the phone picks a new one and waits a minute.
+   (The PIN is only a fallback: pairing normally takes a QR code, see step 2.)
 2. **Windows:** run `PhoneDrop-…-win-x64.exe` – .NET is built in, nothing to install. (If you already have the
    [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0), the `…-small.exe` does the same in 0.4 MB.)
-   Pick the phone from the list (or type its address) and enter the PIN.
+   The drop box shows a **QR code**: on the phone tap *Scan QR code* (or point the camera at it) and confirm. Done.
+   Clicking the QR code lets you pair with the PIN instead (only while the phone's PhoneDrop screen is open; after five
+   wrong PINs the phone picks a new one and waits a minute).
 3. Drop files into the window. Closing it keeps PhoneDrop in the notification area; quit from the ⋯ menu.
 4. Optional: ⋯ → *Explorer: Send to › Phone* adds **Send to › Phone (PhoneDrop)** to the right-click menu.
 5. The other way: on the phone, *Share › PhoneDrop to PC*. Files go to `Downloads` (⋯ → *Folder for files from the

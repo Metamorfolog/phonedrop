@@ -10,6 +10,8 @@ public sealed class Config
     /// <summary>Poslední známá adresa v LAN (host:port). Po změně IP se telefon dohledá přes mDNS podle DeviceId.</summary>
     public string? Address { get; set; }
     public string? Token { get; set; }
+    /// <summary>Sdílený klíč z párování QR kódem (base64url) – pro šifrovaný přenos přes relay v dalších verzích.</summary>
+    public string? Key { get; set; }
     public bool TopMost { get; set; }
     /// <summary>"auto" (podle Windows) nebo kód jazyka – viz <see cref="L.Languages"/>.</summary>
     public string Language { get; set; } = "auto";

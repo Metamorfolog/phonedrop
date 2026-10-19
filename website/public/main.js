@@ -23,7 +23,7 @@
     root.lang = lang;
     $$("[data-ph-en]").forEach(el => { el.placeholder = el.dataset[lang === "cs" ? "phCs" : "phEn"]; });
   };
-  $("#lang-toggle").addEventListener("click", () => {
+  $("#lang-toggle")?.addEventListener("click", () => {
     setLang(lang === "cs" ? "en" : "cs");
     store.set("lang", lang);
   });
@@ -35,7 +35,7 @@
     theme = themes.includes(value) ? value : "auto";
     if (theme === "auto") delete root.dataset.theme; else root.dataset.theme = theme;
   };
-  $("#theme-toggle").addEventListener("click", () => {
+  $("#theme-toggle")?.addEventListener("click", () => {
     setTheme(themes[(themes.indexOf(theme) + 1) % themes.length]);
     if (theme === "auto") store.remove("theme"); else store.set("theme", theme);
   });

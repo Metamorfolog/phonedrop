@@ -232,6 +232,14 @@ public class ReceiverService extends Service {
                 return ok(new JSONObject().put("ok", true).put("token", token)
                         .put("id", prefs.deviceId()).put("name", prefs.deviceName()));
             }
+            case "POST /pair/claim": {
+                // Párování QR kódem: žádost existuje jen 2 minuty po naskenování a potvrzení v telefonu.
+                String token = prefs.claim(req.query.get("c"), req.query.get("proof"), req.query.get("client"));
+                if (token == null) return new HttpServer.Response(404, HttpServer.error("no_claim", "no such pairing request"));
+                refresh();
+                return ok(new JSONObject().put("ok", true).put("token", token)
+                        .put("id", prefs.deviceId()).put("name", prefs.deviceName()));
+            }
             case "GET /ping":
                 if (client(req) == null) return unauthorized();
                 return ok(new JSONObject().put("ok", true).put("id", prefs.deviceId()).put("name", prefs.deviceName()));

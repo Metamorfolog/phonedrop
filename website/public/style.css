@@ -429,3 +429,7 @@ h2 { font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -0.025em; line-height:
   .stats b { font-size: 24px; }
   .terminal { font-size: 12.5px; }
 }
+.pair-card { max-width: 560px; }
+.pair-card h2 { margin-top: 0; }
+.pair-steps { margin: 18px 0; padding-left: 22px; display: grid; gap: 14px; font-size: 16px; }
+.pair-steps .btn { margin-top: 10px; display: inline-flex; }

@@ -43,6 +43,22 @@ public sealed class LanLink(string address, string token) : IPhoneLink
         return (json.GetProperty("token").GetString()!, json.GetProperty("id").GetString()!, json.GetProperty("name").GetString()!);
     }
 
+    /// <summary>
+    /// Párování QR kódem: vyzvedne žádost, kterou telefon naskenoval. Null = tenhle telefon o ní neví
+    /// (404 no_claim – naskenoval ho jiný telefon, nebo ještě nikdo).
+    /// </summary>
+    public static async Task<PairedPhone?> ClaimAsync(string address, string claim, string proof, CancellationToken ct)
+    {
+        var url = new Uri($"http://{address}/pair/claim?c={Uri.EscapeDataString(claim)}&proof={proof}&client={Uri.EscapeDataString(Environment.MachineName)}");
+        using var cts = Short(ct, 3);
+        using var res = await Http.PostAsync(url, null, cts.Token);
+        if (res.StatusCode == HttpStatusCode.NotFound) return null;
+        var json = await ReadJson(res, cts.Token);
+        Check(res, json);
+        return new PairedPhone(json.GetProperty("token").GetString()!, json.GetProperty("id").GetString()!,
+            json.GetProperty("name").GetString()!, address);
+    }
+
     /// <summary>Ověří, že na adrese běží PhoneDrop; vrátí jeho ID a název (bez párování).</summary>
     public static async Task<(string Id, string Name)> InfoAsync(string address, CancellationToken ct)
     {

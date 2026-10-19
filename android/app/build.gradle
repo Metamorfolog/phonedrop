@@ -18,8 +18,8 @@ android {
         minSdk 29
         targetSdk 36
         // Vydání (GitHub Actions) bere verzi ze značky: -PverName=X.Y.Z -PverCode=X*10000+Y*100+Z
-        versionCode Integer.parseInt((project.findProperty('verCode') ?: '10500').toString())
-        versionName((project.findProperty('verName') ?: '1.5.0').toString())
+        versionCode Integer.parseInt((project.findProperty('verCode') ?: '10600').toString())
+        versionName((project.findProperty('verName') ?: '1.6.0').toString())
         // Odkud se berou aktualizace (poslední vydání na GitHubu); pro testy -PupdateUrl=…
         buildConfigField 'String', 'UPDATE_URL',
                 "\"${project.findProperty('updateUrl') ?: 'https://api.github.com/repos/Metamorfolog/phonedrop/releases/latest'}\""
@@ -45,7 +45,9 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (keystoreFile.exists()) {
                 signingConfig signingConfigs.release
             } else {
@@ -59,4 +61,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+// Skener QR kódu z Google Play služeb: vlastní okno se skenováním, appka nepotřebuje oprávnění ke kameře.
+// Bez Play služeb jde kód naskenovat foťákem – je to odkaz, který otevře PhoneDrop.
+dependencies {
+    implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
 }

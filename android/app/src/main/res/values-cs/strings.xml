@@ -120,6 +120,18 @@
         <item quantity="other">%d souborů</item>
     </plurals>
     <string name="n_outbox_cancel">Zrušit</string>
+    <string name="qr_scan">Naskenovat QR kód</string>
+    <string name="qr_confirm_title">Spárovat s tímhle počítačem?</string>
+    <string name="qr_confirm_text">Telefon se spáruje s počítačem, na kterém je QR kód. Ten pak bude moct posílat soubory a nabízet APK k instalaci.</string>
+    <string name="qr_pair">Spárovat</string>
+    <string name="qr_waiting">Čekám na počítač…</string>
+    <string name="qr_waiting_text">Počítač s otevřeným PhoneDropem se ozve během pár vteřin. Oba musí být ve stejné Wi-Fi.</string>
+    <string name="qr_paired">Spárováno s %1$s</string>
+    <string name="qr_timeout_title">Počítač se neozval</string>
+    <string name="qr_timeout_text">Je na počítači otevřený PhoneDrop a jsou oba ve stejné Wi-Fi? Zkus kód naskenovat znovu, nebo spáruj PINem.</string>
+    <string name="qr_not_ours">Tohle není QR kód PhoneDropu.</string>
+    <string name="qr_no_scanner_title">Skener není k dispozici</string>
+    <string name="qr_no_scanner_text">Naskenuj QR kód foťákem telefonu. PhoneDrop se otevře sám.</string>
     <string name="n_install">Instalovat %1$s</string>
     <string name="n_install_text">Ťukni a potvrď instalaci</string>
     <string name="n_installed">Nainstalováno</string>

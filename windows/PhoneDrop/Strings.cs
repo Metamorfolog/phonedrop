@@ -28,7 +28,13 @@ static class L
     public static string Ready => Pick("Ready", "Připraveno");
     public static string ReadyDetail => Pick("Files → Downloads › Drop, APKs → installer", "Soubory jdou do Stažené › Drop, APK k instalaci");
     public static string NotPairedTitle => Pick("No phone paired", "Telefon není spárovaný");
-    public static string NotPairedHint => Pick("⋯ → Pair phone", "⋯ → Spárovat telefon");
+    public static string NotPairedHint => Pick("Scan the QR code with your phone", "Naskenuj QR kód telefonem");
+    public static string QrTitle => Pick("Scan with your phone", "Naskenuj telefonem");
+    public static string QrApp => Pick("PhoneDrop → Scan QR code", "PhoneDrop → Naskenovat QR kód");
+    public static string QrCamera => Pick("or with the phone's camera", "nebo foťákem telefonu");
+    public static string QrPin => Pick("Click to enter a PIN instead", "Kliknutím zadáš PIN");
+    public static string QrWaiting => Pick("Waiting for the phone…", "Čekám na telefon…");
+    public static string PairFirst => Pick("Pair a phone first", "Nejdřív spáruj telefon");
     public static string NoPhone => Pick("No phone", "Žádný telefon");
     public static string Unpaired => Pick("Not paired", "Nespárováno");
     public static string Phone => Pick("Phone", "Telefon");

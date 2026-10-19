@@ -35,6 +35,9 @@ public sealed class MainForm : Form
     readonly CancellationTokenSource stopping = new();
     string? lastReceived;
     bool balloonIsReceived;
+    // Párování QR kódem v drop zóně.
+    QrPairing? qrPairing;
+    CancellationTokenSource? qrCts;
 
     public MainForm(string[] initialFiles, bool justUpdated = false)
     {
@@ -69,7 +72,7 @@ public sealed class MainForm : Form
 
         header = new PhoneHeader { Dock = DockStyle.Top, Height = 62 };
         zone = new DropZone { Dock = DockStyle.Fill };
-        zone.Click += (_, _) => PickFiles();
+        zone.Click += (_, _) => { if (zone.Qr != null) Pair(); else PickFiles(); };
         var zoneHost = new Panel { Dock = DockStyle.Fill, Padding = new Padding(14, 2, 14, 10), BackColor = Theme.Back };
         zoneHost.Controls.Add(zone);
         card = new StatusCard { Dock = DockStyle.Fill };
@@ -87,7 +90,7 @@ public sealed class MainForm : Form
         menu.Items.Add(L.MenuOpenReceived, null, (_, _) => OpenReceived());
         menu.Items.Add(L.MenuReceiveFolder, null, (_, _) => PickReceiveFolder());
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(L.MenuPair, null, (_, _) => Pair());
+        menu.Items.Add(L.MenuPair, null, (_, _) => StartQrPairing());
         sendToItem = new ToolStripMenuItem(L.MenuSendTo, null, (_, _) => ToggleSendTo());
         topItem = new ToolStripMenuItem(L.MenuTopMost, null, (_, _) => ToggleTopMost());
         menu.Items.Add(sendToItem);
@@ -175,7 +178,7 @@ public sealed class MainForm : Form
         Shown += (_, _) =>
         {
             if (SelfTest) return;
-            if (!config.IsPaired) Pair();
+            if (!config.IsPaired) StartQrPairing();
             Enqueue(initialFiles);
             watch.Start();
             _ = CheckPhoneAsync(force: true);
@@ -227,7 +230,13 @@ public sealed class MainForm : Form
         var results = new List<Outcome>();
         try
         {
-            if (!config.IsPaired) { Pair(); if (!config.IsPaired) { queue.Clear(); return; } }
+            if (!config.IsPaired)
+            {
+                queue.Clear();
+                card.Set(CardKind.Error, L.PairFirst, L.NotPairedHint);
+                if (zone.Qr == null) StartQrPairing();
+                return;
+            }
             card.Set(CardKind.Busy, config.DeviceName ?? L.Phone, L.Connecting, null, queue.Count);
             var link = await sender.ConnectAsync(CancellationToken.None);
             SetOnline(true);
@@ -268,19 +277,100 @@ public sealed class MainForm : Form
             ShowBalloon(false, 4000, "PhoneDrop", string.Join("\n", results.TakeLast(3)), ToolTipIcon.None);
     }
 
+    /// <summary>Párování PINem (záloha k QR kódu).</summary>
     void Pair()
     {
         ShowWindow();
         using var dlg = new PairForm();
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
-        config.Address = dlg.Address;
-        config.Token = dlg.Token;
-        config.DeviceId = dlg.DeviceId;
-        config.DeviceName = dlg.DeviceName;
+        Paired(dlg.Address, dlg.Token, dlg.DeviceId, dlg.DeviceName, null);
+    }
+
+    void Paired(string address, string token, string id, string name, string? key)
+    {
+        StopQrPairing();
+        config.Address = address;
+        config.Token = token;
+        config.DeviceId = id;
+        config.DeviceName = name;
+        config.Key = key;
         config.Save();
         online = true;
         RefreshPhone();
-        card.Set(CardKind.Ok, L.PairedWith(config.DeviceName!), L.DropHere);
+        card.Set(CardKind.Ok, L.PairedWith(name), L.DropHere);
+        ShowWindow();
+    }
+
+    /// <summary>QR kód v drop zóně; počítač mezitím obchází telefony v síti, jestli ho některý naskenoval.</summary>
+    void StartQrPairing()
+    {
+        StopQrPairing();
+        ShowWindow();
+        var cts = qrCts = new CancellationTokenSource();
+        if (!busy) card.Set(CardKind.Info, L.QrWaiting, config.IsPaired ? L.QrPin : L.NotPairedHint);
+        _ = QrLoopAsync(cts.Token);
+    }
+
+    void StopQrPairing()
+    {
+        qrCts?.Cancel();
+        qrCts = null;
+        qrPairing = null;
+        zone.Qr = null;
+    }
+
+    async Task QrLoopAsync(CancellationToken ct)
+    {
+        var addresses = new List<string>();
+        if (config.Address != null) addresses.Add(config.Address);
+        var lastScan = DateTime.MinValue;
+        while (!ct.IsCancellationRequested)
+        {
+            if (qrPairing == null || qrPairing.Expired)
+            {
+                qrPairing = new QrPairing();
+                zone.Qr = qrPairing.Matrix;
+            }
+            // Skryté okno nikdo neskenuje – šetřit síť.
+            if (Visible)
+            {
+                if (DateTime.UtcNow - lastScan > TimeSpan.FromSeconds(4))
+                {
+                    lastScan = DateTime.UtcNow;
+                    try
+                    {
+                        foreach (var p in await Mdns.DiscoverAsync(timeoutMs: 1200, ct: ct))
+                            if (!addresses.Contains(p.Address)) addresses.Add(p.Address);
+                    }
+                    catch (Exception e) when (e is not OperationCanceledException) { }
+                }
+                var pairing = qrPairing;
+                var phone = await pairing.TryClaimAsync(addresses, ct);
+                if (ct.IsCancellationRequested) return;
+                if (phone != null)
+                {
+                    Paired(phone.Address, phone.Token, phone.Id, phone.Name, pairing.Key);
+                    return;
+                }
+            }
+            try { await Task.Delay(1500, ct); }
+            catch (OperationCanceledException) { return; }
+        }
+    }
+
+    /// <summary>Pro --ui-selftest: drop zóna s QR kódem.</summary>
+    internal void ShowQrForTest() => zone.Qr = new QrPairing().Matrix;
+
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        // Esc zavře QR kód, když už je nějaký telefon spárovaný.
+        if (keyData == Keys.Escape && zone.Qr != null && config.IsPaired)
+        {
+            StopQrPairing();
+            card.Set(CardKind.Info, L.Ready, L.ReadyDetail);
+            return true;
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
     }
 
     void OpenFeedback()
@@ -543,6 +633,7 @@ public sealed class MainForm : Form
         }
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnSystemPreferences;
         stopping.Cancel();
+        qrCts?.Cancel();
         watch.Dispose();
         updateTimer.Dispose();
         tray.Dispose();
