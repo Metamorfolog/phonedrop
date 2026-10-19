@@ -40,8 +40,13 @@ public class ReceiverService extends Service {
     private NsdManager.RegistrationListener nsdListener;
     private ConnectivityManager.NetworkCallback netCallback;
 
+    /** Spustí přijímač; když to systém z pozadí nedovolí (Android 12+), naběhne po otevření appky. */
     static void start(Context ctx) {
-        ctx.startForegroundService(new Intent(ctx, ReceiverService.class));
+        try {
+            ctx.startForegroundService(new Intent(ctx, ReceiverService.class));
+        } catch (RuntimeException e) {
+            Log.w(TAG, "start not allowed now", e);
+        }
     }
 
     static void stop(Context ctx) {

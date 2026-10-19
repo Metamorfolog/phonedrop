@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhoneDrop: drag a file on Windows, it lands on your Android phone</title>
+  <meta name="description" content="Drop a file into a small window on Windows and it lands on your Android phone. APKs open the installer with one tap. No cable, no adb, no cloud. Free and open source.">
+  <meta name="theme-color" content="#f2f5f1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1311" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="PhoneDrop: drag a file on Windows, it lands on your phone">
+  <meta property="og:description" content="APKs install with one tap, everything else goes to Downloads. No cable, no adb, no cloud. Free and open source.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/Metamorfolog/phonedrop/main/website/public/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/Metamorfolog/phonedrop/main/website/public/assets/og.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="#top" aria-label="PhoneDrop">
+      <img src="assets/icon.png" alt="" width="32" height="32">
+      <span>PhoneDrop</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#how"><span data-l="en">How it works</span><span data-l="cs">Jak to funguje</span></a>
+      <a href="#features"><span data-l="en">Features</span><span data-l="cs">Co umí</span></a>
+      <a href="#feedback"><span data-l="en">Feedback</span><span data-l="cs">Zpětná vazba</span></a>
+      <a href="https://github.com/Metamorfolog/phonedrop" rel="noopener">GitHub</a>
+    </nav>
+    <div class="nav-end">
+      <button class="icon-btn" type="button" id="theme-toggle" aria-label="Theme / Vzhled">
+        <svg class="ti ti-auto" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2v14a7 7 0 0 1 0-14Z"/></svg>
+        <svg class="ti ti-light" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10ZM11 1h2v3h-2V1Zm0 19h2v3h-2v-3ZM3.5 4.9l1.4-1.4L7 5.6 5.6 7 3.5 4.9Zm13.4 13.5 1.4-1.4 2.1 2.1-1.4 1.4-2.1-2.1ZM1 11h3v2H1v-2Zm19 0h3v2h-3v-2ZM5.6 17 7 18.4l-2.1 2.1-1.4-1.4L5.6 17ZM18.4 3.5l1.4 1.4L17.7 7 16.3 5.6l2.1-2.1Z"/></svg>
+        <svg class="ti ti-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.3 2a9.9 9.9 0 0 0 8.9 13.9A10 10 0 1 1 12.3 2Z"/></svg>
+      </button>
+      <button class="lang" type="button" id="lang-toggle" aria-label="Switch language / Přepnout jazyk">
+        <span data-l="en">CZ</span><span data-l="cs">EN</span>
+      </button>
+      <a class="btn btn-small" href="#download"><span data-l="en">Download</span><span data-l="cs">Stáhnout</span></a>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-copy">
+        <a class="pill" href="#download">
+          <span class="pill-dot"></span>
+          <span><span class="js-version">v1.0.0</span> · <span data-l="en">Windows → Android</span><span data-l="cs">Windows → Android</span></span>
+        </a>
+        <h1>
+          <span data-l="en">Drag a file on Windows.<br><span class="grad">It lands on your phone.</span></span>
+          <span data-l="cs">Přetáhni soubor ve Windows.<br><span class="grad">A je v telefonu.</span></span>
+        </h1>
+        <p class="lead">
+          <span data-l="en">Drop it into a small window and it's on your Android phone. An <b>APK</b> opens the installer right away, one tap on <b>Install</b> and you're done. Everything else goes to <b>Downloads</b>. No cable, no adb, no wireless debugging.</span>
+          <span data-l="cs">Pusť ho do malého okénka a je v telefonu s Androidem. <b>APK</b> rovnou otevře instalaci, stačí ťuknout na <b>Instalovat</b>. Všechno ostatní se uloží do <b>Stažených</b>. Bez kabelu, bez adb, bez bezdrátového ladění.</span>
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary js-dl-win" href="https://github.com/Metamorfolog/phonedrop/releases/download/v1.0.0/PhoneDrop-1.0.0-win-x64.exe">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.1 10.4 4v7.1H3V5.1Zm8.3-1.2L21 2.5v8.6h-9.7V3.9ZM3 12h7.4v7.1L3 18v-6Zm8.3 0H21v8.6l-9.7-1.4V12Z"/></svg>
+            <span data-l="en">Download for Windows</span><span data-l="cs">Stáhnout pro Windows</span>
+          </a>
+          <a class="btn btn-ghost js-dl-apk" href="https://github.com/Metamorfolog/phonedrop/releases/download/v1.0.0/PhoneDrop-1.0.0.apk">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.6 9.5 19.4 6.4l-.9-.5-1.8 3.2A10.6 10.6 0 0 0 12 8.2c-1.7 0-3.3.3-4.7.9L5.5 5.9l-.9.5 1.8 3.1A9.5 9.5 0 0 0 2 17h20a9.5 9.5 0 0 0-4.4-7.5ZM7.5 14.2a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm9 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
+            <span data-l="en">Android app</span><span data-l="cs">Aplikace pro Android</span>
+          </a>
+        </div>
+        <p class="meta">
+          <span data-l="en">Windows 10 &amp; 11 · Android 10+ · local network only · MIT license</span>
+          <span data-l="cs">Windows 10 a 11 · Android 10+ · jen v místní síti · licence MIT</span>
+        </p>
+      </div>
+
+      <div class="hero-demo" aria-hidden="true">
+        <div class="stage">
+          <figure class="win">
+            <div class="win-bar"><img src="assets/icon.png" alt="" width="16" height="16"><span>PhoneDrop</span><i></i><i></i><i></i></div>
+            <img data-l="en" class="only-light" src="assets/screens/win-en-light-busy.webp" alt="" width="800" height="760">
+            <img data-l="en" class="only-dark" src="assets/screens/win-en-dark-busy.webp" alt="" width="800" height="760">
+            <img data-l="cs" class="only-light" src="assets/screens/win-cs-light-busy.webp" alt="" width="800" height="760">
+            <img data-l="cs" class="only-dark" src="assets/screens/win-cs-dark-busy.webp" alt="" width="800" height="760">
+          </figure>
+          <div class="flyer"><span class="flyer-doc">APK</span><span>my-app.apk</span></div>
+          <figure class="phone">
+            <img src="assets/screens/phone-install.webp" alt="" width="540" height="980">
+          </figure>
+        </div>
+        <p class="demo-caption">
+          <span data-l="en">The real apps: the window on Windows, the Android install prompt on the phone.</span>
+          <span data-l="cs">Skutečné aplikace: okénko ve Windows a instalace na telefonu.</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- Numbers -->
+    <section class="stats" aria-label="Highlights">
+      <div><b>1</b><span data-l="en">tap to install an APK</span><span data-l="cs">ťuknutí na instalaci APK</span></div>
+      <div><b>0</b><span data-l="en">cables, accounts or clouds</span><span data-l="cs">kabelů, účtů a cloudů</span></div>
+      <div><b>260 kB</b><span data-l="en">Windows app</span><span data-l="cs">aplikace pro Windows</span></div>
+      <div><b>2</b><span data-l="en">languages, light &amp; dark</span><span data-l="cs">jazyky, světlý i tmavý</span></div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section" id="how">
+      <h2><span data-l="en">Set up once. Then just drag.</span><span data-l="cs">Jednou nastavit. Pak jen táhnout.</span></h2>
+      <p class="section-lead">
+        <span data-l="en">The phone listens on your home Wi-Fi, the PC finds it by itself. Pairing with a PIN makes sure only your computer can send.</span>
+        <span data-l="cs">Telefon poslouchá v domácí Wi-Fi a počítač ho najde sám. Párování PINem zajistí, že posílat může jen tvůj počítač.</span>
+      </p>
+      <ol class="steps">
+        <li>
+          <span class="step-num">1</span>
+          <h3><span data-l="en">Install both apps</span><span data-l="cs">Nainstaluj obě aplikace</span></h3>
+          <p><span data-l="en">PhoneDrop.apk on the phone, PhoneDrop.exe on Windows. The phone app shows its address and a six-digit PIN.</span><span data-l="cs">PhoneDrop.apk do telefonu, PhoneDrop.exe do Windows. Aplikace v telefonu ukáže svou adresu a šestimístný PIN.</span></p>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <h3><span data-l="en">Pair with the PIN</span><span data-l="cs">Spáruj PINem</span></h3>
+          <p><span data-l="en">On Windows, pick your phone from the list and type the PIN. Done once, remembered for good.</span><span data-l="cs">Ve Windows vyber telefon ze seznamu a opiš PIN. Stačí jednou, zůstane zapamatovaný.</span></p>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <h3><span data-l="en">Drag files in</span><span data-l="cs">Přetahuj soubory</span></h3>
+          <p><span data-l="en">Into the window, or right-click → Send to › Phone. APKs ask for one tap, other files just arrive.</span><span data-l="cs">Do okénka, nebo pravým tlačítkem → Odeslat do › Telefon. APK chce jedno ťuknutí, ostatní soubory prostě dorazí.</span></p>
+        </li>
+      </ol>
+
+      <div class="shots">
+        <figure class="shot-phone">
+          <img data-l="en" class="only-light" src="assets/screens/phone-en-light.webp" alt="PhoneDrop on Android: pairing PIN, receiving switch and setup checklist" width="540" height="980" loading="lazy">
+          <img data-l="en" class="only-dark" src="assets/screens/phone-en-dark.webp" alt="PhoneDrop on Android in dark mode" width="540" height="980" loading="lazy">
+          <img data-l="cs" class="only-light" src="assets/screens/phone-cs-light.webp" alt="PhoneDrop v Androidu: PIN pro spárování, příjem a kontrolní seznam" width="540" height="980" loading="lazy">
+          <img data-l="cs" class="only-dark" src="assets/screens/phone-cs-dark.webp" alt="PhoneDrop v Androidu v tmavém režimu" width="540" height="980" loading="lazy">
+          <figcaption><span data-l="en">The phone: PIN, status and a setup checklist</span><span data-l="cs">Telefon: PIN, stav a kontrolní seznam</span></figcaption>
+        </figure>
+        <figure class="shot-win">
+          <div class="win-bar"><img src="assets/icon.png" alt="" width="16" height="16"><span>PhoneDrop</span><i></i><i></i><i></i></div>
+          <img data-l="en" class="only-light" src="assets/screens/win-en-light-done.webp" alt="PhoneDrop on Windows after installing an APK" width="800" height="760" loading="lazy">
+          <img data-l="en" class="only-dark" src="assets/screens/win-en-dark-done.webp" alt="PhoneDrop on Windows in dark mode" width="800" height="760" loading="lazy">
+          <img data-l="cs" class="only-light" src="assets/screens/win-cs-light-done.webp" alt="PhoneDrop ve Windows po instalaci APK" width="800" height="760" loading="lazy">
+          <img data-l="cs" class="only-dark" src="assets/screens/win-cs-dark-done.webp" alt="PhoneDrop ve Windows v tmavém režimu" width="800" height="760" loading="lazy">
+          <figcaption><span data-l="en">Windows: it waits for the install and tells you how it went</span><span data-l="cs">Windows: počká na instalaci a řekne, jak dopadla</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features">
+      <h2><span data-l="en">Small app, no fuss</span><span data-l="cs">Malá aplikace, žádné starosti</span></h2>
+      <div class="features">
+        <div class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.6 3.8 10.7 9 12 5.2-1.3 9-6.4 9-12V5l-9-4Zm-2 16-4-4 1.4-1.4 2.6 2.6 6.6-6.6L18 9l-8 8Z"/></svg>
+          <h3><span data-l="en">APK in one tap</span><span data-l="cs">APK jedním ťuknutím</span></h3>
+          <p><span data-l="en">Uses Android's own installer, so updates keep your data. The PC shows Installed, Cancelled or why it failed.</span><span data-l="cs">Používá instalátor Androidu, takže aktualizace zachová data. Počítač ukáže Nainstalováno, Zrušeno, nebo proč to selhalo.</span></p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2Z"/></svg>
+          <h3><span data-l="en">Any file</span><span data-l="cs">Jakýkoli soubor</span></h3>
+          <p><span data-l="en">Photos, PDFs, videos of any size go straight to Downloads › Drop. The phone checks free space before the first byte.</span><span data-l="cs">Fotky, PDF, videa libovolné velikosti jdou rovnou do Stažené › Drop. Telefon předem ověří, jestli se soubor vejde.</span></p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 9l2 2a12.7 12.7 0 0 1 18 0l2-2A15.5 15.5 0 0 0 1 9Zm8 8 3 3 3-3a4.2 4.2 0 0 0-6 0Zm-4-4 2 2a7 7 0 0 1 10 0l2-2a9.8 9.8 0 0 0-14 0Z"/></svg>
+          <h3><span data-l="en">Finds the phone</span><span data-l="cs">Telefon si najde</span></h3>
+          <p><span data-l="en">The phone announces itself on the network (mDNS). New IP after a router restart? PhoneDrop finds it again.</span><span data-l="cs">Telefon se v síti ohlásí sám (mDNS). Nová IP po restartu routeru? PhoneDrop ho najde znovu.</span></p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v12H5.2L3 18.2V4Zm2 2v7.4l.4-.4H19V6H5Zm2 2h10v2H7V8Z"/></svg>
+          <h3><span data-l="en">Send to › Phone</span><span data-l="cs">Odeslat do › Telefon</span></h3>
+          <p><span data-l="en">Optional entry in the Explorer right-click menu. Lives in the notification area, so it's always one drag away.</span><span data-l="cs">Volitelná položka v pravém tlačítku Průzkumníku. Sedí v oznamovací oblasti, takže je vždy na jedno přetažení.</span></p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg>
+          <h3><span data-l="en">Stays at home</span><span data-l="cs">Zůstává doma</span></h3>
+          <p><span data-l="en">Files go directly from the PC to the phone on your Wi-Fi. No account, no cloud, no tracking.</span><span data-l="cs">Soubory jdou přímo z počítače do telefonu přes tvou Wi-Fi. Žádný účet, žádný cloud, žádné sledování.</span></p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2v14a7 7 0 0 1 0-14Z"/></svg>
+          <h3><span data-l="en">Light, dark, CZ, EN</span><span data-l="cs">Světlý, tmavý, CZ, EN</span></h3>
+          <p><span data-l="en">Both apps follow your system theme and language, or pick your own. Plus a command line for scripts.</span><span data-l="cs">Obě aplikace se řídí vzhledem a jazykem systému, nebo si vyber sám. A k tomu příkazová řádka pro skripty.</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Command line -->
+    <section class="section split">
+      <div>
+        <h2><span data-l="en">Scriptable too</span><span data-l="cs">I pro skripty</span></h2>
+        <p class="section-lead">
+          <span data-l="en">Build an app, push it to the phone and wait until it's installed, from one line. Handy right after <code>gradlew assembleRelease</code>.</span>
+          <span data-l="cs">Sestav aplikaci, pošli ji do telefonu a počkej na instalaci, jedním řádkem. Hodí se hned po <code>gradlew assembleRelease</code>.</span>
+        </p>
+      </div>
+      <pre class="terminal" aria-label="Terminal example"><span class="t-bar"><i></i><i></i><i></i></span><code><span class="c"># phones on the network</span>
+<span class="p">&gt;</span> PhoneDrop --discover
+<span class="o">PhoneDrop Pixel 8   192.168.1.20:8765</span>
+
+<span class="c"># send and wait for the install</span>
+<span class="p">&gt;</span> PhoneDrop --send app-release.apk
+<span class="o">✓ app-release.apk: Installed</span></code></pre>
+    </section>
+
+    <!-- Download -->
+    <section class="section" id="download">
+      <h2><span data-l="en">Get PhoneDrop</span><span data-l="cs">Stáhnout PhoneDrop</span></h2>
+      <p class="section-lead center">
+        <span data-l="en">Free and open source under the MIT license. Latest version: <b class="js-version">v1.0.0</b>.</span>
+        <span data-l="cs">Zdarma a open source pod licencí MIT. Nejnovější verze: <b class="js-version">v1.0.0</b>.</span>
+      </p>
+      <div class="downloads">
+        <a class="dl dl-main js-dl-win" href="https://github.com/Metamorfolog/phonedrop/releases/download/v1.0.0/PhoneDrop-1.0.0-win-x64.exe">
+          <svg class="dl-os" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.1 10.4 4v7.1H3V5.1Zm8.3-1.2L21 2.5v8.6h-9.7V3.9ZM3 12h7.4v7.1L3 18v-6Zm8.3 0H21v8.6l-9.7-1.4V12Z"/></svg>
+          <span class="dl-title">Windows</span>
+          <span class="dl-sub"><span data-l="en">PhoneDrop.exe, no install</span><span data-l="cs">PhoneDrop.exe bez instalace</span></span>
+          <span class="dl-size js-size-win">0.3 MB</span>
+        </a>
+        <a class="dl dl-main js-dl-apk" href="https://github.com/Metamorfolog/phonedrop/releases/download/v1.0.0/PhoneDrop-1.0.0.apk">
+          <svg class="dl-os" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.6 9.5 19.4 6.4l-.9-.5-1.8 3.2A10.6 10.6 0 0 0 12 8.2c-1.7 0-3.3.3-4.7.9L5.5 5.9l-.9.5 1.8 3.1A9.5 9.5 0 0 0 2 17h20a9.5 9.5 0 0 0-4.4-7.5ZM7.5 14.2a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm9 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
+          <span class="dl-title">Android</span>
+          <span class="dl-sub"><span data-l="en">PhoneDrop.apk, Android 10+</span><span data-l="cs">PhoneDrop.apk, Android 10+</span></span>
+          <span class="dl-size js-size-apk">2.1 MB</span>
+        </a>
+      </div>
+      <p class="small center">
+        <span data-l="en">The Windows app needs the free <a href="https://dotnet.microsoft.com/download/dotnet/10.0" rel="noopener">.NET 10 Desktop Runtime</a> (Windows offers to install it on first start). <a href="https://github.com/Metamorfolog/phonedrop/releases">All releases</a></span>
+        <span data-l="cs">Aplikace pro Windows potřebuje bezplatný <a href="https://dotnet.microsoft.com/download/dotnet/10.0" rel="noopener">.NET 10 Desktop Runtime</a> (Windows ho při prvním spuštění nabídne). <a href="https://github.com/Metamorfolog/phonedrop/releases">Všechna vydání</a></span>
+      </p>
+    </section>
+
+    <!-- Feedback -->
+    <section class="section" id="feedback">
+      <h2><span data-l="en">Found a bug? Got an idea?</span><span data-l="cs">Našel jsi chybu? Máš nápad?</span></h2>
+      <p class="section-lead center">
+        <span data-l="en">Write it here. Every message reaches the author, no account needed.</span>
+        <span data-l="cs">Napiš ji sem. Každá zpráva dorazí autorovi, bez registrace.</span>
+      </p>
+      <form class="feedback" id="feedback-form" novalidate>
+        <div class="kinds" role="radiogroup" aria-label="Type">
+          <label><input type="radio" name="kind" value="bug" checked><span><span data-l="en">Bug</span><span data-l="cs">Chyba</span></span></label>
+          <label><input type="radio" name="kind" value="idea"><span><span data-l="en">Idea</span><span data-l="cs">Nápad</span></span></label>
+          <label><input type="radio" name="kind" value="question"><span><span data-l="en">Question</span><span data-l="cs">Otázka</span></span></label>
+          <label><input type="radio" name="kind" value="other"><span><span data-l="en">Other</span><span data-l="cs">Jiné</span></span></label>
+        </div>
+        <label class="field">
+          <span><span data-l="en">Message</span><span data-l="cs">Zpráva</span></span>
+          <textarea name="message" rows="5" maxlength="5000" required data-ph-en="What happened, or what would you like PhoneDrop to do? Phone model and Android version help." data-ph-cs="Co se stalo, nebo co bys od PhoneDropu chtěl? Pomůže model telefonu a verze Androidu."></textarea>
+        </label>
+        <label class="field">
+          <span><span data-l="en">E-mail (optional, only if you want a reply)</span><span data-l="cs">E-mail (nepovinný, jen pokud chceš odpověď)</span></span>
+          <input type="email" name="email" maxlength="200" autocomplete="email" data-ph-en="you@example.com" data-ph-cs="ty@example.cz">
+        </label>
+        <!-- Left empty by people; bots that fill every field are ignored. -->
+        <label class="hp" aria-hidden="true">Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+        <div class="feedback-end">
+          <button class="btn btn-primary" type="submit"><span data-l="en">Send</span><span data-l="cs">Odeslat</span></button>
+          <p class="feedback-status" id="feedback-status" role="status" aria-live="polite"></p>
+        </div>
+        <p class="small">
+          <span data-l="en">Only what you type is sent, plus the page language. Your IP address isn't stored.</span>
+          <span data-l="cs">Odešle se jen to, co napíšeš, a jazyk stránky. IP adresa se neukládá.</span>
+        </p>
+      </form>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section faq">
+      <h2>FAQ</h2>
+      <details>
+        <summary><span data-l="en">Why do I still have to tap Install?</span><span data-l="cs">Proč musím pořád ťuknout na Instalovat?</span></summary>
+        <p><span data-l="en">Android doesn't let an ordinary app install other apps silently, only with root or ADB. PhoneDrop hands the APK straight to the system installer, so one tap is the minimum Android allows.</span><span data-l="cs">Android běžné aplikaci nedovolí instalovat jiné aplikace potichu, to jde jen s rootem nebo přes ADB. PhoneDrop předá APK rovnou systémovému instalátoru, takže jedno ťuknutí je minimum, které Android dovolí.</span></p>
+      </details>
+      <details>
+        <summary><span data-l="en">Google Play Protect wants to scan the app</span><span data-l="cs">Google Play Protect chce aplikaci skenovat</span></summary>
+        <p><span data-l="en">For apps it hasn't seen before, Play Protect offers a scan. You can scan, or choose <i>More details → Install without scanning</i>. The first time, Android also asks you to allow "Install unknown apps" for PhoneDrop.</span><span data-l="cs">U aplikací, které ještě nezná, nabídne Play Protect sken. Můžeš skenovat, nebo zvolit <i>Další podrobnosti → Instalovat bez skenování</i>. Poprvé se Android zeptá i na povolení „Instalovat neznámé aplikace“ pro PhoneDrop.</span></p>
+      </details>
+      <details>
+        <summary><span data-l="en">Does it work outside my home network?</span><span data-l="cs">Funguje to i mimo domácí síť?</span></summary>
+        <p><span data-l="en">Not yet. The PC and the phone have to be on the same network (a VPN like Tailscale works if you type the phone's address). A relay for the road is planned.</span><span data-l="cs">Zatím ne. Počítač a telefon musí být ve stejné síti (funguje i VPN jako Tailscale, když zadáš adresu telefonu). Relay pro cesty je v plánu.</span></p>
+      </details>
+      <details>
+        <summary><span data-l="en">Is it safe?</span><span data-l="cs">Je to bezpečné?</span></summary>
+        <p><span data-l="en">The phone only accepts files from computers paired with its PIN; each gets its own secret token. The connection itself isn't encrypted, which is fine on your home Wi-Fi but not on a public one. You can unpair all computers in the phone app any time.</span><span data-l="cs">Telefon přijímá soubory jen od počítačů spárovaných jeho PINem; každý dostane vlastní tajný token. Samotné spojení šifrované není, což v domácí Wi-Fi nevadí, na veřejné ano. Všechna párování zrušíš v aplikaci v telefonu kdykoli.</span></p>
+      </details>
+      <details>
+        <summary><span data-l="en">Windows says the publisher is unknown</span><span data-l="cs">Windows hlásí neznámého vydavatele</span></summary>
+        <p><span data-l="en">The app isn't code-signed (certificates are expensive for a free project). Click <i>More info → Run anyway</i>.</span><span data-l="cs">Aplikace není digitálně podepsaná (certifikát je pro bezplatný projekt drahý). Klikni na <i>Další informace → Přesto spustit</i>.</span></p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="brand">
+      <img src="assets/icon.png" alt="" width="24" height="24">
+      <span>PhoneDrop</span>
+    </div>
+    <p>
+      <span data-l="en">Made by <a href="https://github.com/Metamorfolog">Metamorfolog</a> · MIT license</span>
+      <span data-l="cs">Vytvořil <a href="https://github.com/Metamorfolog">Metamorfolog</a> · licence MIT</span>
+    </p>
+    <a href="https://github.com/Metamorfolog/phonedrop" rel="noopener"><span data-l="en">Source code on GitHub</span><span data-l="cs">Zdrojový kód na GitHubu</span></a>
+  </footer>
+</body>
+</html>
