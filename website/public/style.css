@@ -281,7 +281,7 @@ h1 { font-size: clamp(40px, 5.4vw, 64px); line-height: 1.05; letter-spacing: -0.
 /* Sekce */
 .section { max-width: 1180px; margin: 0 auto; padding: 96px 20px 0; }
 h2 { font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -0.025em; line-height: 1.1; margin: 0 0 14px; font-weight: 800; }
-#how h2, #features h2, #download h2, #feedback h2, .faq h2 { text-align: center; }
+#how h2, #features h2, #download h2, #feedback h2, #support h2, .faq h2 { text-align: center; }
 .section-lead { color: var(--muted); font-size: 18px; max-width: 720px; margin: 0 0 40px; }
 #how .section-lead, .center { margin-left: auto; margin-right: auto; text-align: center; }
 
@@ -390,6 +390,20 @@ h2 { font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -0.025em; line-height:
 .feedback-status.ok { color: var(--accent-ink); }
 .feedback-status.err { color: var(--bad); }
 
+/* Podpora */
+.support { max-width: 720px; margin: 0 auto; background: var(--card); border-radius: var(--radius); padding: 28px; display: flex; gap: 28px; align-items: center; box-shadow: var(--shadow); }
+.support-qr { flex: none; display: block; background: #fff; border-radius: 14px; padding: 6px; line-height: 0; box-shadow: 0 0 0 1px var(--line); }
+.support-qr img { width: 172px; height: 172px; image-rendering: pixelated; }
+.support-body { min-width: 0; display: grid; gap: 12px; }
+.support-body h3 { margin: 0; font-size: 22px; }
+.support-body h3 small { color: var(--faint); font-size: 14px; font-weight: 500; margin-left: 6px; }
+.support-body .small { margin: 0; }
+.support-address { display: block; font-size: 14px; padding: 10px 12px; border-radius: 10px; background: var(--card-2); border: 1px solid var(--line-2); word-break: break-all; user-select: all; }
+.support-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.support-copied { color: var(--accent-ink); font-size: 15px; }
+.support-kofi { margin-top: 14px; justify-content: space-between; }
+.support-kofi .btn { flex: none; white-space: nowrap; }
+
 /* FAQ */
 .faq details { max-width: 820px; margin: 0 auto 10px; background: var(--card); border-radius: 16px; box-shadow: var(--shadow); }
 .faq summary { cursor: pointer; padding: 18px 22px; font-weight: 650; list-style: none; position: relative; padding-right: 48px; }
@@ -430,6 +444,10 @@ h2 { font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -0.025em; line-height:
   .shot-phone { max-width: 300px; margin: 0 auto; }
   .split { grid-template-columns: 1fr; gap: 24px; }
   .downloads { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .support { flex-direction: column; align-items: stretch; padding: 20px 16px; }
+  .support-qr { align-self: center; }
 }
 @media (max-width: 480px) {
   body { font-size: 16px; }

@@ -111,8 +111,34 @@
     });
   }
 
+  // ---------- Support ----------
+  function support() {
+    const button = $("#sol-copy");
+    if (!button) return;
+    const note = $("#sol-copied");
+    button.addEventListener("click", async () => {
+      let ok = false;
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy);
+        ok = true;
+      } catch {
+        // Bez schránky: označit adresu, ať jde zkopírovat ručně.
+        const range = document.createRange();
+        range.selectNodeContents($("#sol-address"));
+        const selection = getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      note.textContent = ok
+        ? (lang === "cs" ? "Zkopírováno" : "Copied")
+        : (lang === "cs" ? "Adresa je označená, zkopíruj ji Ctrl+C" : "Address selected, press Ctrl+C");
+      setTimeout(() => { note.textContent = ""; }, 2500);
+    });
+  }
+
   setLang(lang);
   setTheme(theme);
   feedback();
+  support();
   loadRelease();
 })();
