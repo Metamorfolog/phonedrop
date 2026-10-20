@@ -217,13 +217,24 @@ sealed class DropZone : PaintedControl
                     if (m[y, x]) g.FillRectangle(dark, x0 + (x + quiet) * mod, y0 + (y + quiet) * mod, mod, mod);
         g.Restore(state);
 
-        float tx = (x0 + box) / K + 16, tw = W - tx - 10, cy = H / 2f;
+        // Text vpravo: nadpis i řádky se zalamují (anglický nadpis je na úzkém okně delší než řádek)
+        // a celý blok se svisle vycentruje podle skutečné výšky.
+        float tx = (x0 + box) / K + 16, tw = W - tx - 10;
         using var big = Px(12f, true);
         using var small = Px(8.75f);
-        DrawText(g, L.QrTitle, big, new RectangleF(tx, cy - 52, tw, 24), Theme.Fore, TextFormatFlags.WordEllipsis);
-        DrawText(g, L.QrApp, small, new RectangleF(tx, cy - 22, tw, 36), Theme.Dim, TextFormatFlags.WordBreak);
-        DrawText(g, L.QrCamera, small, new RectangleF(tx, cy + 12, tw, 18), Theme.Dim, TextFormatFlags.WordEllipsis);
-        DrawText(g, L.QrPin, small, new RectangleF(tx, cy + 36, tw, 36), Theme.Accent, TextFormatFlags.WordBreak);
+        var lines = new (string Text, Font Font, Color Color, float Gap)[]
+        {
+            (L.QrTitle, big, Theme.Fore, 8), (L.QrApp, small, Theme.Dim, 2), (L.QrCamera, small, Theme.Dim, 10), (L.QrPin, small, Theme.Accent, 0),
+        };
+        var flags = TextFormatFlags.WordBreak | TextFormatFlags.NoPadding;
+        float Height(string t, Font f) => TextRenderer.MeasureText(t, f, new Size((int)(tw * K), int.MaxValue), flags).Height / K;
+        float total = lines.Sum(l => Height(l.Text, l.Font) + l.Gap), ly = (H - total) / 2f;
+        foreach (var (text, font, color, gap) in lines)
+        {
+            float h = Height(text, font);
+            DrawText(g, text, font, new RectangleF(tx, ly, tw, h + 2), color, flags);
+            ly += h + gap;
+        }
     }
 }
 

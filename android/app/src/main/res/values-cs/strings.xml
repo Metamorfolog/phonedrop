@@ -6,7 +6,7 @@
     <string name="status_off">Vypnuto</string>
 
     <string name="hero_pin">PIN pro spárování</string>
-    <string name="hero_hint">Ve Windows: PhoneDrop → ⋯ → Spárovat telefon. Párovat jde, jen když je tahle obrazovka otevřená.</string>
+    <string name="hero_hint">Naskenuj QR kód v okně PhoneDropu na počítači. Nebo tam na kód klikni a zadej tenhle PIN. Párovat jde, jen když je tahle obrazovka otevřená.</string>
     <string name="hero_off_title">Příjem je vypnutý</string>
     <string name="hero_off_text">Počítač teď telefon nenajde.</string>
     <string name="hero_turn_on">Zapnout příjem</string>

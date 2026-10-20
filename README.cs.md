@@ -10,7 +10,7 @@ Náhrada za „adb install“ přes wireless debugging: **přetáhni soubor do o
 
 | Windows | | Android | |
 |:-:|:-:|:-:|:-:|
-| <img src="website/public/assets/screens/win-cs-light-busy.webp" width="230" alt="Odesílání APK"> | <img src="website/public/assets/screens/win-cs-dark-done.webp" width="230" alt="Nainstalováno, tmavý vzhled"> | <img src="website/public/assets/screens/phone-cs-light.webp" width="170" alt="PhoneDrop v telefonu"> | <img src="website/public/assets/screens/phone-install.webp" width="170" alt="Instalace jedním ťuknutím"> |
+| <img src="website/public/assets/screens/win-cs-light-busy.webp" width="230" alt="Odesílání APK"> | <img src="website/public/assets/screens/win-cs-light-qr.webp" width="230" alt="Párování QR kódem"> | <img src="website/public/assets/screens/phone-cs-light.webp" width="170" alt="PhoneDrop v telefonu"> | <img src="website/public/assets/screens/phone-install.webp" width="170" alt="Instalace jedním ťuknutím"> |
 
 
 - `.apk` → telefon rovnou otevře systémovou instalaci (jedno ťuknutí na **Instalovat**; tichá instalace bez rootu/ADB nejde).

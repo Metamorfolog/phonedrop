@@ -11,7 +11,7 @@ installer right away: one tap on **Install** and you're done. No cable, no `adb`
 
 | Windows | | Android | |
 |:-:|:-:|:-:|:-:|
-| <img src="website/public/assets/screens/win-en-light-busy.webp" width="230" alt="Sending an APK"> | <img src="website/public/assets/screens/win-en-dark-done.webp" width="230" alt="Installed, dark theme"> | <img src="website/public/assets/screens/phone-en-light.webp" width="170" alt="PhoneDrop on the phone"> | <img src="website/public/assets/screens/phone-install.webp" width="170" alt="One-tap install"> |
+| <img src="website/public/assets/screens/win-en-light-busy.webp" width="230" alt="Sending an APK"> | <img src="website/public/assets/screens/win-en-light-qr.webp" width="230" alt="Pairing with a QR code"> | <img src="website/public/assets/screens/phone-en-light.webp" width="170" alt="PhoneDrop on the phone"> | <img src="website/public/assets/screens/phone-install.webp" width="170" alt="One-tap install"> |
 
 
 - **APK** → the phone opens the Android installer (a single tap to confirm; silent installs aren't possible without root or ADB).
