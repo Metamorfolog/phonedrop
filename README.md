@@ -5,6 +5,15 @@
 Drag a file into a small window on Windows and it lands on your Android phone. APKs open the system
 installer right away: one tap on **Install** and you're done. No cable, no `adb`, no wireless debugging.
 
+<p align="center">
+  <a href="https://phonedrop.apexpiksel.cz"><img src="docs/media/demo.gif" width="800" alt="An APK dropped on the Windows window installs on the phone with one tap; a folder of photos lands in Downloads"></a>
+</p>
+
+| Windows | | Android | |
+|:-:|:-:|:-:|:-:|
+| <img src="website/public/assets/screens/win-en-light-busy.webp" width="230" alt="Sending an APK"> | <img src="website/public/assets/screens/win-en-dark-done.webp" width="230" alt="Installed, dark theme"> | <img src="website/public/assets/screens/phone-en-light.webp" width="170" alt="PhoneDrop on the phone"> | <img src="website/public/assets/screens/phone-install.webp" width="170" alt="One-tap install"> |
+
+
 - **APK** → the phone opens the Android installer (a single tap to confirm; silent installs aren't possible without root or ADB).
 - **Split APKs** (`.apks` from SAI or bundletool, `.xapk`) → all the APKs inside go into one install.
 - **Anything else** → saved to `Downloads/Drop`, with a notification that opens it. Drop several files at once or
