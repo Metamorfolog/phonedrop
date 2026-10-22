@@ -109,6 +109,12 @@ final class Outbox {
         ContentResolver cr = ctx.getContentResolver();
         for (Uri uri : uris) {
             String name = Inbox.safeName(displayName(cr, uri));
+            if (!shareable(ctx, uri)) {
+                Log.w(TAG, "outbox refused " + uri);
+                failed.add(name);
+                synchronized (this) { preparing--; }
+                continue;
+            }
             String id = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
             File file = new File(dir, id);
             try (InputStream in = cr.openInputStream(uri); OutputStream out = new FileOutputStream(file)) {
@@ -136,6 +142,18 @@ final class Outbox {
         }
         Notifier.outboxChanged(ctx);
         return added;
+    }
+
+    /**
+     * Sdílet smí jen cizí obsah: content:// jiné appky. file:// a vlastní providery by četly s právy
+     * PhoneDropu – cizí appka by tak poslala do počítače naše soukromá data (shared_prefs s klíči).
+     */
+    static boolean shareable(Context ctx, Uri uri) {
+        if (uri == null || !ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) return false;
+        String authority = uri.getAuthority();
+        if (authority == null) return false;
+        android.content.pm.ProviderInfo p = ctx.getPackageManager().resolveContentProvider(authority, 0);
+        return p == null || !ctx.getPackageName().equals(p.packageName);
     }
 
     private static String displayName(ContentResolver cr, Uri uri) {

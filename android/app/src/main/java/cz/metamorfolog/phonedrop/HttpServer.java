@@ -115,6 +115,10 @@ final class HttpServer {
             sock.setSoTimeout(60_000);
             InputStream in = new BufferedInputStream(sock.getInputStream(), 64 * 1024);
             OutputStream out = sock.getOutputStream();
+            if (fromThisDevice(sock)) {
+                write(out, new Response(403, error("local_forbidden", "only other devices may connect")));
+                return;
+            }
             Request req;
             try {
                 req = parse(in);
@@ -135,6 +139,18 @@ final class HttpServer {
         } catch (IOException e) {
             Log.w(TAG, "serve", e);
         }
+    }
+
+    /**
+     * Počítač je vždy jiné zařízení. Spojení z telefonu samotného (127.0.0.1 nebo vlastní IP ve Wi-Fi)
+     * by mohla navázat jen jiná appka – s podvrženým odkazem na párování by si jinak vyzvedla token.
+     * Ladicí build pouští loopback kvůli emulátoru (adb forward tcp:8765 tcp:8765, viz README).
+     */
+    static boolean fromThisDevice(Socket sock) {
+        java.net.InetAddress remote = sock.getInetAddress();
+        if (remote == null) return true;
+        if (remote.isLoopbackAddress()) return !BuildConfig.DEBUG;
+        return remote.equals(sock.getLocalAddress());
     }
 
     static JSONObject error(String code, String msg) {

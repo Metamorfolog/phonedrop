@@ -24,6 +24,7 @@ public class ShareActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         List<Uri> uris = uris(getIntent());
+        uris.removeIf(u -> !Outbox.shareable(this, u));
         if (uris.isEmpty()) {
             finish();
             return;
