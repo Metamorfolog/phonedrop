@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>PhoneDrop</string>
+    <key>CFBundleDisplayName</key>
+    <string>PhoneDrop</string>
+    <key>CFBundleIdentifier</key>
+    <string>cz.metamorfolog.phonedrop.mac</string>
+    <key>CFBundleExecutable</key>
+    <string>PhoneDrop</string>
+    <key>CFBundleIconFile</key>
+    <string>PhoneDrop</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>__VERSION__</string>
+    <key>CFBundleVersion</key>
+    <string>__VERSION__</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>cs</string>
+    </array>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+    <!-- Jen ikona ve stavovém řádku, bez Docku. -->
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>PhoneDrop · github.com/Metamorfolog/phonedrop</string>
+    <!-- Telefon se hledá přes Bonjour a mluví se s ním čistým HTTP v místní síti (viz PROTOCOL.md). -->
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_phonedrop._tcp</string>
+    </array>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>PhoneDrop finds your phone on the local network and sends files to it.</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+    <!-- Přetažení libovolného souboru na ikonu v Docku = poslat do telefonu. -->
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Any file</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.item</string>
+                <string>public.folder</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
