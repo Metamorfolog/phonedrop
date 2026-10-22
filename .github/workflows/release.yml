@@ -1,4 +1,4 @@
-# Vydání: push značky vX.Y.Z → sestaví exe i APK z veřejného kódu, podepíše APK klíčem z tajemství
+# Vydání: push značky vX.Y.Z → sestaví exe, Mac DMG i APK z veřejného kódu, podepíše APK klíčem z tajemství
 # repozitáře a založí GitHub Release se SHA256SUMS.txt (podle nich ověřují aktualizace obě appky).
 #
 # Tajemství (Settings → Secrets and variables → Actions):
@@ -62,6 +62,31 @@ jobs:
           name: windows
           path: dist/
 
+  mac:
+    needs: version
+    runs-on: macos-latest
+    env:
+      VER: ${{ needs.version.outputs.name }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: PhoneDrop.app, DMG a ZIP (universal, ad-hoc podpis)
+        run: mac/build.sh "$VER"
+      - name: Kontrola
+        run: |
+          app=mac/dist/PhoneDrop.app
+          v=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$app/Contents/Info.plist")
+          [ "$v" = "$VER" ] || { echo "::error::appka má verzi $v, čekal jsem $VER"; exit 1; }
+          lipo "$app/Contents/MacOS/PhoneDrop" -verify_arch arm64 x86_64
+          open "$app"; sleep 5
+          pgrep -x PhoneDrop || { echo "::error::PhoneDrop se nespustil"; exit 1; }
+          pkill -x PhoneDrop
+          mkdir dist && cp mac/dist/PhoneDrop-*-mac.dmg mac/dist/PhoneDrop-*-mac.zip dist/
+          ls -l dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mac
+          path: dist/
+
   android:
     needs: version
     runs-on: ubuntu-latest
@@ -110,7 +135,7 @@ jobs:
           path: dist/
 
   release:
-    needs: [version, windows, android]
+    needs: [version, windows, mac, android]
     runs-on: ubuntu-latest
     permissions:
       contents: write

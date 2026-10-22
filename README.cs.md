@@ -27,6 +27,7 @@ Náhrada za „adb install“ přes wireless debugging: **přetáhni soubor do o
 ```
 android/   přijímač pro Android (Java, bez knihoven, minSdk 29)
 windows/   okénko pro Windows (.NET 10, WinForms) + příkazová řádka
+mac/       totéž pro macOS ve stavovém řádku (Swift, SwiftUI, macOS 13+)
 PROTOCOL.md  HTTP protokol a plán relay mimo domácí síť
 ```
 
