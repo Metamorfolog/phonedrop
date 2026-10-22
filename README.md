@@ -33,6 +33,7 @@ installer right away: one tap on **Install** and you're done. No cable, no `adb`
 ```
 android/     receiver for Android (Java, no libraries, Android 10+)
 windows/     the drop window for Windows (.NET 10, WinForms) + a command line
+mac/         the same for macOS, in the menu bar (Swift, SwiftUI, macOS 13+)
 website/     the project page (static HTML, no build step)
 PROTOCOL.md  the HTTP protocol between the two (in Czech)
 ```

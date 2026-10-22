@@ -39,6 +39,23 @@ jobs:
           name: ui-screenshots
           path: shots/
 
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Sestavit PhoneDrop.app a DMG
+        run: mac/build.sh
+      - name: Appka se spustí
+        run: |
+          lipo mac/dist/PhoneDrop.app/Contents/MacOS/PhoneDrop -verify_arch arm64 x86_64
+          open mac/dist/PhoneDrop.app; sleep 5
+          pgrep -x PhoneDrop || { echo "::error::PhoneDrop se nespustil"; exit 1; }
+          pkill -x PhoneDrop
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mac-dmg
+          path: mac/dist/PhoneDrop-*-mac.dmg
+
   android:
     runs-on: ubuntu-latest
     steps:
