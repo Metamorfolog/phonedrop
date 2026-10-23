@@ -48,6 +48,8 @@ PROTOCOL.md  the HTTP protocol between the two (in Czech)
    The drop box shows a **QR code**: on the phone tap *Scan QR code* (or point the camera at it) and confirm. Done.
    Clicking the QR code lets you pair with the PIN instead (only while the phone's PhoneDrop screen is open; after five
    wrong PINs the phone picks a new one and waits a minute).
+   **Mac:** open `PhoneDrop-…-mac.dmg`, drag PhoneDrop to Applications and open it from the menu bar. The app
+   isn't notarized by Apple, so the first time right-click it in Applications › Open.
 3. Drop files into the window. Closing it keeps PhoneDrop in the notification area; quit from the ⋯ menu.
 4. Optional: ⋯ → *Explorer: Send to › Phone* adds **Send to › Phone (PhoneDrop)** to the right-click menu.
 5. The other way: on the phone, *Share › PhoneDrop to PC*. Files go to `Downloads` (⋯ → *Folder for files from the

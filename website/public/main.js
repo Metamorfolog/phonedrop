@@ -45,7 +45,7 @@
 
   function applyRelease(release) {
     const find = re => (release.assets || []).find(a => re.test(a.name));
-    const assets = { win: find(/-win-x64\.exe$/i) || find(/\.exe$/i), winsmall: find(/-small\.exe$/i), apk: find(/\.apk$/i) };
+    const assets = { win: find(/-win-x64\.exe$/i) || find(/\.exe$/i), winsmall: find(/-small\.exe$/i), apk: find(/\.apk$/i), mac: find(/-mac\.dmg$/i) };
     for (const [key, asset] of Object.entries(assets)) {
       if (!asset) continue;
       $$(`.js-dl-${key}`).forEach(a => { a.href = asset.browser_download_url; });

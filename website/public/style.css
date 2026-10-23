@@ -293,7 +293,7 @@ h2 { font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -0.025em; line-height:
 .terminal .p { color: #5fd68a; }
 .terminal .o { color: #9fe7b8; }
 
-.downloads { display: grid; grid-template-columns: repeat(2, minmax(0, 340px)); gap: 16px; justify-content: center; }
+.downloads { display: grid; grid-template-columns: repeat(3, minmax(0, 300px)); gap: 16px; justify-content: center; }
 .dl {
   display: grid;
   grid-template-columns: auto 1fr auto;
