@@ -100,6 +100,9 @@
     <string name="share_unpaired">Nejdřív spáruj počítač: otevři PhoneDrop ve Windows a zadej PIN, který vidíš tady.</string>
     <string name="share_pick">Do kterého počítače?</string>
     <string name="share_sending">Posílám do %1$s…</string>
+    <string name="share_pc_online">%1$s  ·  připojený</string>
+    <string name="share_pc_offline">%1$s  ·  pošle se, až se zapne</string>
+    <string name="share_queued_for">Zařazeno pro %1$s. Vyzvedne si to, jakmile v něm poběží PhoneDrop.</string>
     <string name="share_queued">Zařazeno. Počítač si to vyzvedne, jakmile v něm poběží PhoneDrop.</string>
     <string name="share_failed">Nepodařilo se odeslat: %1$s</string>
     <string name="n_outbox_preparing">Připravuji odeslání do počítače…</string>

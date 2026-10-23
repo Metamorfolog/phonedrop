@@ -109,6 +109,9 @@
     <string name="share_unpaired">Pair a PC first: open PhoneDrop on Windows and enter the PIN shown here.</string>
     <string name="share_pick">Send to which PC?</string>
     <string name="share_sending">Sending to %1$s…</string>
+    <string name="share_pc_online">%1$s  ·  connected</string>
+    <string name="share_pc_offline">%1$s  ·  sends when it\'s on</string>
+    <string name="share_queued_for">Queued for %1$s. It picks it up as soon as PhoneDrop is running there.</string>
     <string name="share_queued">Queued. Your PC picks it up as soon as PhoneDrop is running there.</string>
     <string name="share_failed">Couldn\'t send: %1$s</string>
     <string name="n_outbox_preparing">Preparing to send to your PC…</string>

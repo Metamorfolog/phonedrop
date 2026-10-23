@@ -16,7 +16,7 @@ import java.util.Map;
 
 /**
  * Cíl v nabídce Sdílet: soubory jdou do počítače (uloží se tam do Stažených).
- * Bez vlastního okna – jen výběr počítače, když jich je připojených víc. Kopírování a odeslání
+ * Bez vlastního okna – jen výběr počítače, když je jich spárovaných víc. Kopírování a odeslání
  * obstará {@link ReceiverService} na pozadí, počítač si soubory vyzvedne sám.
  */
 public class ShareActivity extends Activity {
@@ -42,28 +42,33 @@ public class ShareActivity extends Activity {
         for (Map.Entry<String, String> e : Outbox.get(this).online().entrySet()) {
             if (paired.containsKey(e.getKey())) online.put(e.getKey(), e.getValue());
         }
-        if (online.size() > 1) {
-            String[] keys = online.keySet().toArray(new String[0]);
-            String[] names = online.values().toArray(new String[0]);
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.share_pick)
-                    .setItems(names, (d, which) -> send(uris, keys[which], names[which]))
-                    .setOnCancelListener(d -> finish())
-                    .show();
+        if (paired.size() == 1) {
+            Map.Entry<String, String> only = paired.entrySet().iterator().next();
+            send(uris, only.getKey(), only.getValue(), online.containsKey(only.getKey()));
             return;
         }
-        if (online.size() == 1) {
-            Map.Entry<String, String> only = online.entrySet().iterator().next();
-            send(uris, only.getKey(), only.getValue());
-        } else if (paired.size() == 1) {
-            Map.Entry<String, String> only = paired.entrySet().iterator().next();
-            send(uris, only.getKey(), null);
-        } else {
-            send(uris, null, null); // vyzvedne první spárovaný počítač, který se ozve
+        // Víc spárovaných počítačů: vždycky se zeptat. Připojené (běží v nich PhoneDrop) nahoře,
+        // u ostatních je vidět, že soubor počká, až se zapnou.
+        List<String> keys = new ArrayList<>(online.keySet());
+        for (String k : paired.keySet()) if (!keys.contains(k)) keys.add(k);
+        String[] labels = new String[keys.size()];
+        for (int i = 0; i < keys.size(); i++) {
+            String k = keys.get(i);
+            labels[i] = online.containsKey(k)
+                    ? getString(R.string.share_pc_online, online.get(k))
+                    : getString(R.string.share_pc_offline, paired.get(k));
         }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.share_pick)
+                .setItems(labels, (d, which) -> {
+                    String k = keys.get(which);
+                    send(uris, k, online.containsKey(k) ? online.get(k) : paired.get(k), online.containsKey(k));
+                })
+                .setOnCancelListener(d -> finish())
+                .show();
     }
 
-    private void send(List<Uri> uris, String target, String onlineName) {
+    private void send(List<Uri> uris, String target, String name, boolean isOnline) {
         Intent svc = new Intent(this, ReceiverService.class)
                 .setAction(ReceiverService.ACTION_SHARE)
                 .putExtra(ReceiverService.EXTRA_TARGET, target)
@@ -76,8 +81,8 @@ public class ShareActivity extends Activity {
         svc.setClipData(clip);
         try {
             startForegroundService(svc);
-            Toast.makeText(this, onlineName != null ? getString(R.string.share_sending, onlineName)
-                    : getString(R.string.share_queued), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, isOnline ? getString(R.string.share_sending, name)
+                    : getString(R.string.share_queued_for, name), Toast.LENGTH_LONG).show();
         } catch (RuntimeException e) {
             Toast.makeText(this, getString(R.string.share_failed, e.getMessage()), Toast.LENGTH_LONG).show();
         }
